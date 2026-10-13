@@ -1,50 +1,44 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# React Native Mobile Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. TypeScript Estrito & Tipagem Rigorosa (NON-NEGOTIABLE)
+O uso de TypeScript em modo estrito (`strict: true`) é inegociável. É expressamente proibido o uso de `any` ou `as unknown as X` para mascarar erros. Todas as props de componentes, rotas de navegação, contratos de API e estados devem possuir interfaces e tipos explícitos, documentados e validados.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Arquitetura Modular & Separação de Responsabilidades
+A aplicação deve seguir uma estrutura limpa e desacoplada:
+- `src/components/ui/`: Primitivos reutilizáveis de interface (Button, Input, Card, Modal, Typography) agnósticos de regra de negócio.
+- `src/components/features/`: Componentes específicos de domínio de negócio.
+- `src/hooks/`: Lógica de comportamento e consumo de APIs encapsulada em hooks customizados.
+- `src/stores/`: Gerenciamento de estado global focado e atômico (Zustand).
+- `src/services/`: Clientes HTTP, integrações de APIs e tratamento de payloads.
+- `src/types/`: Tipagens globais e contratos compartilhados.
+- `src/constants/`: Tokens de design (cores, tipografia, espaçamentos).
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Performance Mobile-First (Guerra aos Re-renders)
+A interface deve manter taxas de quadros fluidas (60/120 FPS):
+- Listas longas devem obrigatoriamente usar virtualização otimizada (FlashList ou FlatList com `getItemLayout`, `keyExtractor` estável e `maxToRenderPerBatch` ajustado).
+- Funções passadas via props para componentes filhos devem usar `useCallback` e componentes de lista devem ser memoizados com `React.memo`.
+- Operações de processamento pesado ou parsing de dados complexos nunca devem bloquear a UI thread.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Gestão de Estado Previsível & Desacoplada
+Separação estrita entre Estado do Cliente e Estado do Servidor:
+- **Server State**: Gerenciado preferencialmente com TanStack Query (React Query) para cache, retry e sincronização automática.
+- **Client State**: Gerenciado com Zustand para estados locais compartilhados de forma leve e sem boilerplate.
+- Evitar stores monolíticas gigantescas ou prop drilling descontrolado.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Segurança, Armazenamento Seguro & Resiliência
+- Dados sensíveis e tokens de autenticação (JWT) devem ser armazenados de forma criptografada usando SecureStore / MMKV criptografado. Nunca salvar credenciais em texto puro.
+- Tratamento resiliente de conectividade com feedback visual claro para estados de loading, erros de rede e ausência de conexão (offline-first onde aplicável).
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Padrões de Estilização & UI
+- Design System consistente baseado em tokens centralizados (`colors`, `spacing`, `typography`, `borderRadius`).
+- Proibido o uso de valores "mágicos" soltos de cores e margens no código.
+- Estilização realizada via `StyleSheet.create` nativo ou NativeWind/Tailwind configurado, garantindo alta performance de compilação de estilos.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## Governança & Portões de Qualidade
+- Qualquer pull request ou código integrado deve compilar sem erros de TypeScript (`tsc --noEmit`).
+- Linters e formatadores (ESLint e Prettier) devem passar sem avisos ou erros.
+- A Constituição tem precedência sobre opiniões individuais de código e só pode ser alterada mediante revisão documentada.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
-
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
-
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-13
