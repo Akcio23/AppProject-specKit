@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { CardProps } from '@/types';
 import { colors, spacing, borderRadius, typography } from '@/constants/theme';
