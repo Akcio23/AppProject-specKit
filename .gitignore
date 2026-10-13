@@ -4,6 +4,13 @@
 .specify/integrations/packages/
 .specify/integrations/packages.json
 
+# Node & Expo
+node_modules/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+
 # Variáveis de ambiente e credenciais
 .env
 .env*.local
