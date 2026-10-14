@@ -1,10 +1,11 @@
 import { memo, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Share, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Button, StateMessage } from '@/components/ui';
 import { useRandomVerse } from '@/hooks/useRandomVerse';
 import { useBibleStore } from '@/stores/useBibleStore';
 import { useAppStore } from '@/stores/useAppStore';
-import { colors, spacing, typography, borderRadius } from '@/constants/theme';
+import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
 
 interface Props {
   /** Abre a busca já com o capítulo do versículo exibido. */
@@ -61,89 +62,100 @@ export const VerseOfTheDayCard = memo(({ onReadChapter }: Props) => {
   }, [data]);
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.badgeWrapper}>
-          <Text style={styles.badgeIcon}>✨</Text>
-          <Text style={styles.badgeText}>PALAVRA DO DIA</Text>
-        </View>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: Platform.OS === 'android' ? 'rgba(17, 23, 38, 0.92)' : 'transparent',
+        },
+      ]}
+    >
+      <BlurView intensity={45} tint="dark" style={styles.blurContainer}>
+        <View style={styles.innerCard}>
+          <View style={styles.cardHeader}>
+            <View style={styles.badgeWrapper}>
+              <Text style={styles.badgeIcon}>✨</Text>
+              <Text style={styles.badgeText}>PALAVRA DO DIA</Text>
+            </View>
 
-        {data ? (
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={handleToggleFavorite}
-              accessibilityLabel="Salvar versículo nos favoritos"
-              style={({ pressed }) => [styles.iconBtn, pressed ? styles.iconBtnPressed : null]}
-            >
-              <Text style={styles.actionIcon}>{isSaved ? '❤️' : '🤍'}</Text>
-            </Pressable>
-            <Pressable
-              onPress={handleShare}
-              accessibilityLabel="Compartilhar versículo"
-              style={({ pressed }) => [styles.iconBtn, pressed ? styles.iconBtnPressed : null]}
-            >
-              <Text style={styles.actionIcon}>📤</Text>
-            </Pressable>
-          </View>
-        ) : null}
-      </View>
-
-      {toastMessage ? (
-        <View style={styles.toastBox}>
-          <Text style={styles.toastText}>{toastMessage}</Text>
-        </View>
-      ) : null}
-
-      {isPending ? (
-        <StateMessage variant="loading" message="Buscando uma palavra de paz..." />
-      ) : error && !data ? (
-        <StateMessage
-          variant="error"
-          message="Não foi possível buscar a Palavra no momento. Verifique sua conexão."
-          onRetry={handleAnother}
-          retryLabel="Tentar novamente"
-        />
-      ) : data ? (
-        <>
-          <View style={[styles.verseBody, isFetching ? styles.refreshing : null]}>
-            <Text style={styles.openQuote}>“</Text>
-            <Text style={styles.verseText} testID="verse-of-the-day-text">
-              {data.verse.text}
-            </Text>
-            <Text style={styles.closeQuote}>”</Text>
-
-            <View style={styles.metaRow}>
-              <View style={styles.referenceBadge}>
-                <Text style={styles.referenceText}>{data.reference}</Text>
+            {data ? (
+              <View style={styles.headerActions}>
+                <Pressable
+                  onPress={handleToggleFavorite}
+                  accessibilityLabel="Salvar versículo nos favoritos"
+                  style={({ pressed }) => [styles.iconBtn, pressed ? styles.iconBtnPressed : null]}
+                >
+                  <Text style={styles.actionIcon}>{isSaved ? '❤️' : '🤍'}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleShare}
+                  accessibilityLabel="Compartilhar versículo"
+                  style={({ pressed }) => [styles.iconBtn, pressed ? styles.iconBtnPressed : null]}
+                >
+                  <Text style={styles.actionIcon}>📤</Text>
+                </Pressable>
               </View>
-              <Text style={styles.translationText}>{data.translationName}</Text>
-            </View>
+            ) : null}
           </View>
 
-          {error ? <Text style={styles.inlineError}>{error.message}</Text> : null}
+          {toastMessage ? (
+            <View style={styles.toastBox}>
+              <Text style={styles.toastText}>{toastMessage}</Text>
+            </View>
+          ) : null}
 
-          <View style={styles.buttonRow}>
-            <View style={styles.buttonWrapper}>
-              <Button
-                label="Outro Versículo"
-                variant="primary"
-                size="md"
-                onPress={handleAnother}
-                loading={isFetching}
-                testID="verse-of-the-day-refresh"
-              />
-            </View>
-            <View style={styles.buttonWrapper}>
-              <Button
-                label="Ler Capítulo"
-                variant="outline"
-                size="md"
-                onPress={handleReadChapter}
-              />
-            </View>
-          </View>
-        </>
-      ) : null}
+          {isPending ? (
+            <StateMessage variant="loading" message="Buscando uma palavra de paz..." />
+          ) : error && !data ? (
+            <StateMessage
+              variant="error"
+              message="Não foi possível buscar a Palavra no momento. Verifique sua conexão."
+              onRetry={handleAnother}
+              retryLabel="Tentar novamente"
+            />
+          ) : data ? (
+            <>
+              <View style={[styles.verseBody, isFetching ? styles.refreshing : null]}>
+                <Text style={styles.openQuote}>“</Text>
+                <Text style={styles.verseText} testID="verse-of-the-day-text">
+                  {data.verse.text}
+                </Text>
+                <Text style={styles.closeQuote}>”</Text>
+
+                <View style={styles.metaRow}>
+                  <View style={styles.referenceBadge}>
+                    <Text style={styles.referenceText}>{data.reference}</Text>
+                  </View>
+                  <Text style={styles.translationText}>{data.translationName}</Text>
+                </View>
+              </View>
+
+              {error ? <Text style={styles.inlineError}>{error.message}</Text> : null}
+
+              <View style={styles.buttonRow}>
+                <View style={styles.buttonWrapper}>
+                  <Button
+                    label="Outro Versículo"
+                    variant="primary"
+                    size="md"
+                    onPress={handleAnother}
+                    loading={isFetching}
+                    testID="verse-of-the-day-refresh"
+                  />
+                </View>
+                <View style={styles.buttonWrapper}>
+                  <Button
+                    label="Ler Capítulo"
+                    variant="glass"
+                    size="md"
+                    onPress={handleReadChapter}
+                  />
+                </View>
+              </View>
+            </>
+          ) : null}
+        </View>
+      </BlurView>
     </View>
   );
 });
@@ -152,17 +164,19 @@ VerseOfTheDayCard.displayName = 'VerseOfTheDayCard';
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg + 2,
-    borderWidth: 1.5,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 1.2,
     borderColor: colors.borderGold,
-    padding: spacing.md + 4,
     marginBottom: spacing.lg,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    ...shadows.glassGlow,
+  },
+  blurContainer: {
+    width: '100%',
+  },
+  innerCard: {
+    padding: spacing.lg,
+    backgroundColor: 'rgba(17, 23, 38, 0.45)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -173,9 +187,9 @@ const styles = StyleSheet.create({
   badgeWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceSubtleDark,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 5,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: 6,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.borderGold,
@@ -188,30 +202,32 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.xs - 1,
     fontWeight: typography.fontWeight.bold,
     color: colors.primary,
-    letterSpacing: 1,
+    letterSpacing: typography.letterSpacing.extraWide,
   },
   headerActions: {
     flexDirection: 'row',
     gap: spacing.xs,
   },
   iconBtn: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceSubtleDark,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: colors.borderGlassDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconBtnPressed: {
-    opacity: 0.7,
+    opacity: 0.75,
     transform: [{ scale: 0.94 }],
   },
   actionIcon: {
     fontSize: 16,
   },
   toastBox: {
-    backgroundColor: colors.surfaceSubtleDark,
-    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    borderRadius: borderRadius.full,
     paddingVertical: 6,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
@@ -220,31 +236,33 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   toastText: {
-    color: colors.primary,
+    color: colors.primaryLight,
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
   },
   verseBody: {
-    backgroundColor: colors.surfaceSubtleDark,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    backgroundColor: 'rgba(10, 14, 24, 0.55)',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md + 2,
     marginBottom: spacing.md,
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.borderGlassDark,
   },
   refreshing: {
     opacity: 0.5,
   },
   openQuote: {
     color: colors.primary,
-    fontSize: 32,
-    lineHeight: 32,
+    fontSize: 34,
+    lineHeight: 34,
     fontWeight: typography.fontWeight.bold,
   },
   closeQuote: {
     color: colors.primary,
-    fontSize: 32,
-    lineHeight: 20,
+    fontSize: 34,
+    lineHeight: 22,
     fontWeight: typography.fontWeight.bold,
     alignSelf: 'flex-end',
   },
@@ -262,12 +280,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.xs + 2,
     borderTopWidth: 1,
-    borderTopColor: colors.borderDark,
+    borderTopColor: colors.borderGlassDark,
   },
   referenceBadge: {
-    backgroundColor: colors.backgroundDark,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
     borderColor: colors.borderGold,
@@ -278,8 +296,9 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
   },
   translationText: {
-    color: colors.textMutedDark,
+    color: colors.textSecondaryDark,
     fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
   },
   inlineError: {
     color: colors.warning,

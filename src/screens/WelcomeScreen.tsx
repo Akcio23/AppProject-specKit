@@ -1,7 +1,8 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TopicMenu, TopicTabItem } from '@/components/ui';
+import * as Haptics from 'expo-haptics';
+import { SideDrawer } from '@/components/ui';
 import {
   VerseOfTheDayCard,
   DevotionalTopics,
@@ -9,7 +10,7 @@ import {
 } from '@/components/features/bible';
 import { useAppStore } from '@/stores/useAppStore';
 import { RootStackScreenProps } from '@/navigation/types';
-import { colors, spacing, typography, borderRadius } from '@/constants/theme';
+import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
 
 type MainTopic = 'devocional' | 'temas' | 'guardados' | 'ajustes';
 
@@ -17,6 +18,24 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
   const insets = useSafeAreaInsets();
   const { savedVerses, removeSavedVerse } = useAppStore();
   const [activeTopic, setActiveTopic] = useState<MainTopic>('devocional');
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+
+  const handleOpenDrawer = useCallback(() => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      // Fallback
+    }
+    setIsDrawerOpen(true);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setIsDrawerOpen(false);
+  }, []);
+
+  const handleSelectDrawerMenu = useCallback((id: string) => {
+    setActiveTopic(id as MainTopic);
+  }, []);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -29,22 +48,15 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
     return { title: 'Serena Noite de Luz 🌙', subtitle: 'Descanse seu coração na Palavra.' };
   }, []);
 
-  const tabs: TopicTabItem<MainTopic>[] = useMemo(
-    () => [
-      { id: 'devocional', label: 'Devocional', icon: '🕊️' },
-      { id: 'temas', label: 'Temas', icon: '✨' },
-      {
-        id: 'guardados',
-        label: 'Guardados',
-        icon: '❤️',
-        badgeCount: savedVerses.length > 0 ? savedVerses.length : undefined,
-      },
-      { id: 'ajustes', label: 'Ajustes', icon: '⚙️' },
-    ],
-    [savedVerses.length],
-  );
 
-  const openSearch = useCallback(() => navigation.navigate('BibleSearch'), [navigation]);
+  const openSearch = useCallback(() => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      // Fallback
+    }
+    navigation.navigate('BibleSearch');
+  }, [navigation]);
 
   const openPassage = useCallback(
     (reference: string) => navigation.navigate('BibleSearch', { initialReference: reference }),
@@ -74,6 +86,16 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
     >
       {/* Cabeçalho Compacto & Acolhedor */}
       <View style={styles.headerRow}>
+        <Pressable
+          onPress={handleOpenDrawer}
+          style={({ pressed }) => [styles.drawerToggleBtn, pressed && styles.drawerToggleBtnPressed]}
+          accessibilityLabel="Abrir menu de navegação lateral"
+        >
+          <View style={styles.hamburgerLine} />
+          <View style={[styles.hamburgerLine, { width: 14 }]} />
+          <View style={styles.hamburgerLine} />
+        </Pressable>
+
         <View style={styles.headerLeft}>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>BÍBLIA SAGRADA</Text>
@@ -81,6 +103,7 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
           <Text style={styles.headerTitle}>{greeting.title}</Text>
           <Text style={styles.headerSubtitle}>{greeting.subtitle}</Text>
         </View>
+
         <Pressable
           onPress={openSearch}
           style={({ pressed }) => [styles.searchBtn, pressed ? styles.searchBtnPressed : null]}
@@ -90,12 +113,6 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
         </Pressable>
       </View>
 
-      {/* Menu Superior por Tópicos */}
-      <TopicMenu
-        tabs={tabs}
-        activeTab={activeTopic}
-        onSelectTab={setActiveTopic}
-      />
 
       {/* Conteúdo Separado por Tópico */}
       <ScrollView
@@ -232,6 +249,16 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
           </View>
         )}
       </ScrollView>
+
+      {/* Navbar lateral que se esconde à esquerda */}
+      <SideDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        activeId={activeTopic}
+        onSelectMenu={handleSelectDrawerMenu}
+        onOpenSearch={openSearch}
+        savedCount={savedVerses.length}
+      />
     </View>
   );
 });
@@ -259,44 +286,72 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surfaceSubtleDark,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
     borderColor: colors.borderGold,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
     borderRadius: borderRadius.full,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   badgeText: {
     color: colors.primary,
     fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-    letterSpacing: 1,
+    fontWeight: typography.fontWeight.heavy,
+    letterSpacing: typography.letterSpacing.extraWide,
   },
   headerTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
+    fontSize: typography.fontSize.xxl - 4,
+    fontWeight: typography.fontWeight.heavy,
+    letterSpacing: typography.letterSpacing.tight,
     color: colors.textPrimaryDark,
   },
   headerSubtitle: {
-    fontSize: typography.fontSize.xs,
-    color: colors.textMutedDark,
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondaryDark,
     marginTop: 2,
+    fontWeight: typography.fontWeight.medium,
+  },
+  drawerToggleBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm + 2,
+    gap: 4,
+    ...shadows.soft,
+  },
+  drawerToggleBtnPressed: {
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    transform: [{ scale: 0.94 }],
+  },
+  hamburgerLine: {
+    width: 18,
+    height: 2,
+    backgroundColor: colors.primary,
+    borderRadius: 2,
   },
   searchBtn: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceDark,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
+    ...shadows.soft,
   },
   searchBtnPressed: {
     borderColor: colors.primary,
-    backgroundColor: colors.surfaceSubtleDark,
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    transform: [{ scale: 0.94 }],
   },
   searchBtnIcon: {
     fontSize: 18,
@@ -340,13 +395,14 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   appInfoCard: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    padding: spacing.md,
+    backgroundColor: 'rgba(17, 23, 38, 0.70)',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+    padding: spacing.lg,
     marginTop: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.soft,
   },
   appInfoTitle: {
     fontSize: typography.fontSize.sm,
@@ -356,7 +412,7 @@ const styles = StyleSheet.create({
   },
   appInfoText: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMutedDark,
+    color: colors.textSecondaryDark,
     lineHeight: 18,
     marginBottom: spacing.sm,
   },
@@ -366,12 +422,13 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
   },
   prayerCard: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    padding: spacing.md,
+    backgroundColor: 'rgba(17, 23, 38, 0.70)',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+    padding: spacing.lg,
     marginBottom: spacing.lg,
+    ...shadows.soft,
   },
   prayerHeader: {
     flexDirection: 'row',
@@ -380,7 +437,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   prayerIcon: {
-    fontSize: 16,
+    fontSize: 18,
   },
   prayerTitle: {
     fontSize: typography.fontSize.sm,
@@ -389,7 +446,7 @@ const styles = StyleSheet.create({
   },
   prayerText: {
     fontSize: typography.fontSize.sm,
-    color: colors.textMutedDark,
+    color: colors.textSecondaryDark,
     lineHeight: 22,
     fontStyle: 'italic',
   },
@@ -397,11 +454,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   savedCard: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    padding: spacing.md,
+    backgroundColor: 'rgba(17, 23, 38, 0.70)',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+    padding: spacing.lg,
+    ...shadows.soft,
   },
   savedCardHeader: {
     flexDirection: 'row',
@@ -410,7 +468,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   savedRefBadge: {
-    backgroundColor: colors.surfaceSubtleDark,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
     borderWidth: 1,
     borderColor: colors.borderGold,
     borderRadius: borderRadius.sm,
@@ -463,13 +521,14 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
   },
   emptySavedBox: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
+    backgroundColor: 'rgba(17, 23, 38, 0.70)',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
     padding: spacing.xl,
     alignItems: 'center',
     marginTop: spacing.sm,
+    ...shadows.soft,
   },
   emptySavedIcon: {
     fontSize: 36,

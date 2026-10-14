@@ -1,14 +1,47 @@
 import { memo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { CardProps } from '@/types';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
 
-export const Card = memo(({ children, title, subtitle, testID }: CardProps) => {
-  return (
-    <View testID={testID} style={styles.card}>
+export const Card = memo(({
+  children,
+  title,
+  subtitle,
+  testID,
+  glass = true,
+  glow = false,
+}: CardProps) => {
+  const cardBorderColor = glow ? colors.borderGold : colors.borderGlassDark;
+  const shadowStyle = glow ? shadows.glassGlow : shadows.soft;
+
+  const content = (
+    <View style={[styles.innerContent, glow && styles.glowInner]}>
       {title && <Text style={styles.title}>{title}</Text>}
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       <View style={styles.content}>{children}</View>
+    </View>
+  );
+
+  return (
+    <View
+      testID={testID}
+      style={[
+        styles.outerContainer,
+        shadowStyle,
+        {
+          borderColor: cardBorderColor,
+          backgroundColor: Platform.OS === 'android' || !glass ? colors.surfaceDark : 'transparent',
+        },
+      ]}
+    >
+      {glass ? (
+        <BlurView intensity={35} tint="dark" style={styles.blurView}>
+          {content}
+        </BlurView>
+      ) : (
+        content
+      )}
     </View>
   );
 });
@@ -16,29 +49,35 @@ export const Card = memo(({ children, title, subtitle, testID }: CardProps) => {
 Card.displayName = 'Card';
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surfaceDark,
+  outerContainer: {
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    padding: spacing.md,
+    overflow: 'hidden',
+    borderWidth: 1.2,
     marginBottom: spacing.md,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+  },
+  blurView: {
+    width: '100%',
+  },
+  innerContent: {
+    padding: spacing.lg,
+    backgroundColor: 'rgba(17, 23, 38, 0.45)',
+  },
+  glowInner: {
+    backgroundColor: 'rgba(212, 175, 55, 0.03)',
   },
   title: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
+    letterSpacing: typography.letterSpacing.tight,
     color: colors.textPrimaryDark,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: typography.fontSize.sm,
-    color: colors.textMutedDark,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondaryDark,
     marginBottom: spacing.md,
+    lineHeight: 20,
   },
   content: {
     marginTop: spacing.xs,

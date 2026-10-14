@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -13,6 +13,7 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
+  hapticFeedback?: boolean;
 }
 
 export interface CardProps {
@@ -20,6 +21,8 @@ export interface CardProps {
   title?: string;
   subtitle?: string;
   testID?: string;
+  glass?: boolean;
+  glow?: boolean;
 }
 
 export interface TextFieldProps {

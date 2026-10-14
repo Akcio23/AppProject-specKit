@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import {
   Pressable,
   Text,
@@ -7,9 +7,11 @@ import {
   StyleProp,
   ViewStyle,
   TextStyle,
+  Animated,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { ButtonProps } from '@/types';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
 
 export const Button = memo(
   ({
@@ -20,7 +22,38 @@ export const Button = memo(
     disabled = false,
     loading = false,
     testID,
+    hapticFeedback = true,
   }: ButtonProps) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const handlePressIn = useCallback(() => {
+      if (disabled || loading) return;
+
+      if (hapticFeedback) {
+        try {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } catch {
+          // Fallback silencioso em plataformas sem suporte a vibração
+        }
+      }
+
+      Animated.spring(scaleAnim, {
+        toValue: 0.965,
+        useNativeDriver: true,
+        speed: 50,
+        bounciness: 4,
+      }).start();
+    }, [disabled, loading, hapticFeedback, scaleAnim]);
+
+    const handlePressOut = useCallback(() => {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 40,
+        bounciness: 6,
+      }).start();
+    }, [scaleAnim]);
+
     const handlePress = useCallback(() => {
       if (!disabled && !loading) {
         onPress();
@@ -31,6 +64,7 @@ export const Button = memo(
       styles.base,
       styles[variant],
       styles[size],
+      variant === 'primary' && !disabled ? shadows.glassGlow : null,
       disabled ? styles.disabled : null,
     ];
 
@@ -42,24 +76,29 @@ export const Button = memo(
     ];
 
     return (
-      <Pressable
-        testID={testID}
-        onPress={handlePress}
-        disabled={disabled || loading}
-        style={({ pressed }) => [
-          buttonStyle,
-          pressed && !disabled && !loading ? styles.pressed : null,
-        ]}
-      >
-        {loading ? (
-          <ActivityIndicator
-            size="small"
-            color={variant === 'outline' || variant === 'ghost' ? colors.primary : '#FFFFFF'}
-          />
-        ) : (
-          <Text style={textStyle}>{label}</Text>
-        )}
-      </Pressable>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Pressable
+          testID={testID}
+          onPress={handlePress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          disabled={disabled || loading}
+          style={buttonStyle}
+        >
+          {loading ? (
+            <ActivityIndicator
+              size="small"
+              color={
+                variant === 'outline' || variant === 'ghost' || variant === 'glass'
+                  ? colors.primary
+                  : '#080B11'
+              }
+            />
+          ) : (
+            <Text style={textStyle}>{label}</Text>
+          )}
+        </Pressable>
+      </Animated.View>
     );
   }
 );
@@ -68,7 +107,7 @@ Button.displayName = 'Button';
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -79,6 +118,11 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: colors.secondary,
   },
+  glass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+  },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
@@ -88,20 +132,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   sm: {
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: spacing.xs + 3,
+    paddingHorizontal: spacing.md,
   },
   md: {
     paddingVertical: spacing.sm + 4,
-    paddingHorizontal: spacing.md,
-  },
-  lg: {
-    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
-  pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.985 }],
+  lg: {
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.xl,
   },
   disabled: {
     opacity: 0.45,
@@ -109,16 +149,23 @@ const styles = StyleSheet.create({
   textBase: {
     fontWeight: typography.fontWeight.semibold,
     textAlign: 'center',
+    letterSpacing: typography.letterSpacing.normal,
   },
   primaryText: {
-    color: '#0F172A',
+    color: '#080B11',
     fontWeight: typography.fontWeight.bold,
   },
   secondaryText: {
     color: '#FFFFFF',
+    fontWeight: typography.fontWeight.semibold,
+  },
+  glassText: {
+    color: colors.textPrimaryDark,
+    fontWeight: typography.fontWeight.semibold,
   },
   outlineText: {
     color: colors.primary,
+    fontWeight: typography.fontWeight.semibold,
   },
   ghostText: {
     color: colors.primaryLight,

@@ -1,6 +1,7 @@
 import { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import * as Haptics from 'expo-haptics';
+import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
 
 export interface DevotionalTopicItem {
   id: string;
@@ -77,6 +78,11 @@ interface DevotionalTopicsProps {
 export const DevotionalTopics = memo(({ onSelectTopic, mode = 'grid' }: DevotionalTopicsProps) => {
   const handlePress = useCallback(
     (reference: string) => {
+      try {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } catch {
+        // Fallback
+      }
       onSelectTopic(reference);
     },
     [onSelectTopic],
@@ -155,33 +161,25 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 2,
   },
   carouselCard: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    padding: spacing.md,
-    width: 168,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: 'rgba(17, 23, 38, 0.72)',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+    padding: spacing.md + 2,
+    width: 172,
+    ...shadows.soft,
   },
   gridContainer: {
     gap: spacing.md,
     paddingBottom: spacing.lg,
   },
   gridCard: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    padding: spacing.md,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: 'rgba(17, 23, 38, 0.72)',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.2,
+    borderColor: colors.borderGlassDark,
+    padding: spacing.lg,
+    ...shadows.soft,
   },
   gridHeader: {
     flexDirection: 'row',
@@ -190,14 +188,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   cardPressed: {
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.975 }],
     borderColor: colors.primary,
+    backgroundColor: 'rgba(28, 36, 56, 0.85)',
   },
   iconCircle: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceSubtleDark,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
