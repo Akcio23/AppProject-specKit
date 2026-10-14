@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, StateMessage, TextField } from '@/components/ui';
 import { PassageView } from '@/components/features/bible';
 import { usePassage } from '@/hooks/usePassage';
-import { useBibleStore } from '@/stores/useBibleStore';
+import { usePreferences } from '@/hooks/usePreferences';
 import { RootStackScreenProps } from '@/navigation/types';
 import { spacing, typography, borderRadius } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
@@ -28,7 +28,7 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
   const [query, setQuery] = useState(initialReference);
   const [submitted, setSubmitted] = useState(initialReference);
 
-  const translationId = useBibleStore((s) => s.translationId);
+  const { translationId } = usePreferences();
   const passage = usePassage(submitted, translationId);
 
   const handleSubmit = useCallback(() => {

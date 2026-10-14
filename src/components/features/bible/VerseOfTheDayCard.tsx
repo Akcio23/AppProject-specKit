@@ -2,8 +2,8 @@ import { memo, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
 import { Button, StateMessage } from '@/components/ui';
 import { useRandomVerse } from '@/hooks/useRandomVerse';
-import { useBibleStore } from '@/stores/useBibleStore';
-import { useAppStore } from '@/stores/useAppStore';
+import { usePreferences } from '@/hooks/usePreferences';
+import { useSavedVerses } from '@/hooks/useSavedVerses';
 import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -15,9 +15,9 @@ interface Props {
 /** Versículo do Dia em estilo editorial limpo, calmo e sereno. */
 export const VerseOfTheDayCard = memo(({ onReadChapter }: Props) => {
   const { theme } = useTheme();
-  const translationId = useBibleStore((s) => s.translationId);
+  const { translationId } = usePreferences();
   const { data, error, isPending, isFetching, refetch } = useRandomVerse(translationId);
-  const { saveVerse, removeSavedVerse, isVerseSaved } = useAppStore();
+  const { saveVerse, removeSavedVerse, isVerseSaved } = useSavedVerses();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isSaved = data ? isVerseSaved(data.reference) : false;

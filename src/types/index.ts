@@ -46,17 +46,20 @@ export interface StateMessageProps {
 }
 
 export interface SavedVerse {
+  id: string;
   reference: string;
   text: string;
   translation: string;
   savedAt: string;
 }
 
+export type NewSavedVerse = Omit<SavedVerse, 'id' | 'savedAt'>;
+
 export interface AppState {
   isDarkMode: boolean;
   savedVerses: SavedVerse[];
   toggleDarkMode: () => void;
-  saveVerse: (verse: Omit<SavedVerse, 'savedAt'>) => void;
-  removeSavedVerse: (reference: string) => void;
-  isVerseSaved: (reference: string) => boolean;
+  saveVerse: (verse: NewSavedVerse) => void;
+  removeSavedVerse: (idOrReference: string) => void;
+  isVerseSaved: (reference: string, translation?: string) => boolean;
 }

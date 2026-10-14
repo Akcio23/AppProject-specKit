@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import * as Haptics from 'expo-haptics';
-import { useAppStore } from '@/stores/useAppStore';
+import { usePreferences } from '@/hooks/usePreferences';
 import { lightTheme, darkTheme, AppTheme } from '@/constants/theme';
 
 export interface UseThemeReturn {
@@ -14,8 +14,7 @@ export interface UseThemeReturn {
  * Oferece feedback tátil na alternância.
  */
 export function useTheme(): UseThemeReturn {
-  const isDarkMode = useAppStore((state) => state.isDarkMode);
-  const toggleDarkMode = useAppStore((state) => state.toggleDarkMode);
+  const { isDarkMode, toggleDarkMode } = usePreferences();
 
   const theme = useMemo<AppTheme>(() => {
     return isDarkMode ? darkTheme : lightTheme;

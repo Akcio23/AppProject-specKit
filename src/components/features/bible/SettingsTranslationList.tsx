@@ -1,7 +1,7 @@
 import { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useTranslations } from '@/hooks/useTranslations';
-import { useBibleStore } from '@/stores/useBibleStore';
+import { usePreferences } from '@/hooks/usePreferences';
 import { spacing, borderRadius, typography } from '@/constants/theme';
 import { Translation } from '@/types/bible';
 import { useTheme } from '@/hooks/useTheme';
@@ -11,8 +11,7 @@ const POPULAR_ORDER = ['almeida', 'kjv', 'web', 'bbe', 'clementine'];
 export const SettingsTranslationList = memo(() => {
   const { theme } = useTheme();
   const { data: translations, isPending, error, refetch } = useTranslations();
-  const translationId = useBibleStore((s) => s.translationId);
-  const setTranslationId = useBibleStore((s) => s.setTranslationId);
+  const { translationId, setTranslationId } = usePreferences();
 
   const handleSelect = useCallback(
     (id: string) => {

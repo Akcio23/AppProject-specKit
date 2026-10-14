@@ -8,7 +8,7 @@ import {
   DevotionalTopics,
   SettingsTranslationList,
 } from '@/components/features/bible';
-import { useAppStore } from '@/stores/useAppStore';
+import { useSavedVerses } from '@/hooks/useSavedVerses';
 import { RootStackScreenProps } from '@/navigation/types';
 import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
@@ -18,7 +18,7 @@ type MainTopic = 'devocional' | 'temas' | 'guardados' | 'ajustes';
 export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome'>) => {
   const insets = useSafeAreaInsets();
   const { theme, isDark, toggleTheme } = useTheme();
-  const { savedVerses, removeSavedVerse } = useAppStore();
+  const { savedVerses, removeSavedVerse } = useSavedVerses();
   const [activeTopic, setActiveTopic] = useState<MainTopic>('devocional');
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
@@ -236,7 +236,7 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
               <View style={styles.savedList}>
                 {savedVerses.map((item) => (
                   <View
-                    key={item.reference}
+                    key={item.id || item.reference}
                     style={[
                       styles.savedCard,
                       shadows.soft,
@@ -276,7 +276,7 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
                           <Text style={styles.actionSmallIcon}>📤</Text>
                         </Pressable>
                         <Pressable
-                          onPress={() => removeSavedVerse(item.reference)}
+                          onPress={() => removeSavedVerse(item.id || item.reference)}
                           hitSlop={8}
                           accessibilityLabel="Remover dos favoritos"
                           style={[
