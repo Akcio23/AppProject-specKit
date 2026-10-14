@@ -2,13 +2,14 @@ import { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useBibleStore } from '@/stores/useBibleStore';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import { spacing, borderRadius, typography } from '@/constants/theme';
 import { Translation } from '@/types/bible';
+import { useTheme } from '@/hooks/useTheme';
 
-// Traduções populares de referência para ordenação ou fallback
 const POPULAR_ORDER = ['almeida', 'kjv', 'web', 'bbe', 'clementine'];
 
 export const SettingsTranslationList = memo(() => {
+  const { theme } = useTheme();
   const { data: translations, isPending, error, refetch } = useTranslations();
   const translationId = useBibleStore((s) => s.translationId);
   const setTranslationId = useBibleStore((s) => s.setTranslationId);
@@ -23,8 +24,10 @@ export const SettingsTranslationList = memo(() => {
   if (isPending) {
     return (
       <View style={styles.stateBox}>
-        <ActivityIndicator color={colors.primary} size="small" />
-        <Text style={styles.stateText}>Carregando versões disponíveis...</Text>
+        <ActivityIndicator color={theme.accent} size="small" />
+        <Text style={[styles.stateText, { color: theme.textSecondary }]}>
+          Carregando versões disponíveis...
+        </Text>
       </View>
     );
   }
@@ -32,17 +35,21 @@ export const SettingsTranslationList = memo(() => {
   if (error || !translations) {
     return (
       <View style={styles.stateBox}>
-        <Text style={styles.stateErrorText}>
+        <Text style={[styles.stateErrorText, { color: theme.textPrimary }]}>
           Não foi possível listar todas as traduções da API.
         </Text>
-        <Pressable onPress={() => void refetch()} style={styles.retryBtn}>
-          <Text style={styles.retryBtnText}>Tentar novamente</Text>
+        <Pressable
+          onPress={() => void refetch()}
+          style={[styles.retryBtn, { backgroundColor: theme.surfaceSubtle }]}
+        >
+          <Text style={[styles.retryBtnText, { color: theme.accentText }]}>
+            Tentar novamente
+          </Text>
         </Pressable>
       </View>
     );
   }
 
-  // Ordena colocando a tradução ativa e as mais conhecidas no topo
   const sortedTranslations = [...translations].sort((a, b) => {
     if (a.id === translationId) return -1;
     if (b.id === translationId) return 1;
@@ -64,34 +71,67 @@ export const SettingsTranslationList = memo(() => {
             onPress={() => handleSelect(item.id)}
             style={({ pressed }) => [
               styles.card,
-              isSelected ? styles.cardSelected : null,
-              pressed ? styles.cardPressed : null,
+              {
+                backgroundColor: theme.surfaceCard,
+                borderColor: isSelected ? theme.accent : theme.borderSubtle,
+              },
+              isSelected && { backgroundColor: theme.surfaceSubtle },
+              pressed && styles.cardPressed,
             ]}
             accessibilityRole="radio"
             accessibilityState={{ selected: isSelected }}
           >
             <View style={styles.radioRow}>
-              <View style={[styles.radioCircle, isSelected ? styles.radioCircleSelected : null]}>
-                {isSelected && <View style={styles.radioInner} />}
+              <View
+                style={[
+                  styles.radioCircle,
+                  { borderColor: isSelected ? theme.accent : theme.border },
+                ]}
+              >
+                {isSelected && (
+                  <View style={[styles.radioInner, { backgroundColor: theme.accent }]} />
+                )}
               </View>
 
               <View style={styles.cardContent}>
                 <View style={styles.titleRow}>
-                  <Text style={[styles.name, isSelected ? styles.nameSelected : null]}>
+                  <Text
+                    style={[
+                      styles.name,
+                      { color: isSelected ? theme.textPrimary : theme.textSecondary },
+                      isSelected && styles.nameSelected,
+                    ]}
+                  >
                     {item.name}
                   </Text>
                   {isSelected && (
-                    <View style={styles.activeBadge}>
-                      <Text style={styles.activeBadgeText}>EM USO</Text>
+                    <View
+                      style={[
+                        styles.activeBadge,
+                        { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+                      ]}
+                    >
+                      <Text style={[styles.activeBadgeText, { color: theme.accentText }]}>
+                        EM USO
+                      </Text>
                     </View>
                   )}
                 </View>
 
                 <View style={styles.tagRow}>
-                  <View style={styles.langBadge}>
-                    <Text style={styles.langText}>{item.language}</Text>
+                  <View
+                    style={[
+                      styles.langBadge,
+                      { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                    ]}
+                  >
+                    <Text style={[styles.langText, { color: theme.textMuted }]}>
+                      {item.language}
+                    </Text>
                   </View>
-                  <Text style={styles.idText}>Código: {item.id.toUpperCase()}</Text>
+                  <Text style={[styles.idText, { color: theme.textMuted }]}>
+                    Código: {item.id.toUpperCase()}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -109,46 +149,31 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   stateBox: {
-    padding: spacing.lg,
+    padding: spacing.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
     gap: spacing.sm,
   },
   stateText: {
-    color: colors.textMutedDark,
-    fontSize: typography.fontSize.xs,
+    fontSize: typography.fontSize.sm,
   },
   stateErrorText: {
-    color: colors.warning,
-    fontSize: typography.fontSize.xs,
+    fontSize: typography.fontSize.sm,
     textAlign: 'center',
+    marginBottom: spacing.xs,
   },
   retryBtn: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.primary,
   },
   retryBtnText: {
-    color: colors.primary,
-    fontSize: typography.fontSize.xs,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
   },
   card: {
-    backgroundColor: colors.surfaceDark,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
     padding: spacing.md,
-  },
-  cardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceSubtleDark,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
   },
   cardPressed: {
     opacity: 0.85,
@@ -159,22 +184,17 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   radioCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.textMutedDark,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioCircleSelected: {
-    borderColor: colors.primary,
-  },
   radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   cardContent: {
     flex: 1,
@@ -183,29 +203,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   name: {
-    fontSize: typography.fontSize.sm + 1,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.textPrimaryDark,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
     flex: 1,
   },
   nameSelected: {
-    color: colors.primary,
+    fontWeight: typography.fontWeight.bold,
   },
   activeBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.xs + 2,
+    paddingHorizontal: spacing.xs + 3,
     paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
     marginLeft: spacing.xs,
   },
   activeBadgeText: {
-    color: '#0F172A',
     fontSize: 9,
     fontWeight: typography.fontWeight.bold,
-    letterSpacing: 0.5,
   },
   tagRow: {
     flexDirection: 'row',
@@ -213,20 +230,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   langBadge: {
-    backgroundColor: colors.surfaceDark,
     borderWidth: 1,
-    borderColor: colors.borderDark,
-    paddingHorizontal: spacing.xs + 3,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.xs + 2,
+    paddingVertical: 1,
+    borderRadius: borderRadius.xs,
   },
   langText: {
     fontSize: 10,
-    color: colors.textMutedDark,
-    fontWeight: typography.fontWeight.medium,
   },
   idText: {
     fontSize: 10,
-    color: colors.textMutedDark,
   },
 });

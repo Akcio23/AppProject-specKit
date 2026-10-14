@@ -1,19 +1,20 @@
 import { memo, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Share, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
 import { Button, StateMessage } from '@/components/ui';
 import { useRandomVerse } from '@/hooks/useRandomVerse';
 import { useBibleStore } from '@/stores/useBibleStore';
 import { useAppStore } from '@/stores/useAppStore';
-import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Props {
   /** Abre a busca já com o capítulo do versículo exibido. */
   onReadChapter: (reference: string) => void;
 }
 
-/** Versículo do Dia em estilo editorial nobre e sagrado. */
+/** Versículo do Dia em estilo editorial limpo, calmo e sereno. */
 export const VerseOfTheDayCard = memo(({ onReadChapter }: Props) => {
+  const { theme } = useTheme();
   const translationId = useBibleStore((s) => s.translationId);
   const { data, error, isPending, isFetching, refetch } = useRandomVerse(translationId);
   const { saveVerse, removeSavedVerse, isVerseSaved } = useAppStore();
@@ -65,97 +66,120 @@ export const VerseOfTheDayCard = memo(({ onReadChapter }: Props) => {
     <View
       style={[
         styles.card,
+        shadows.soft,
         {
-          backgroundColor: Platform.OS === 'android' ? 'rgba(17, 23, 38, 0.92)' : 'transparent',
+          backgroundColor: theme.surfaceCard,
+          borderColor: theme.borderSubtle,
         },
       ]}
     >
-      <BlurView intensity={45} tint="dark" style={styles.blurContainer}>
-        <View style={styles.innerCard}>
-          <View style={styles.cardHeader}>
-            <View style={styles.badgeWrapper}>
-              <Text style={styles.badgeIcon}>✨</Text>
-              <Text style={styles.badgeText}>PALAVRA DO DIA</Text>
-            </View>
+      <View style={styles.cardHeader}>
+        <View style={styles.badgeWrapper}>
+          <Text style={[styles.badgeText, { color: theme.textMuted }]}>
+            PALAVRA DO DIA
+          </Text>
+        </View>
 
-            {data ? (
-              <View style={styles.headerActions}>
-                <Pressable
-                  onPress={handleToggleFavorite}
-                  accessibilityLabel="Salvar versículo nos favoritos"
-                  style={({ pressed }) => [styles.iconBtn, pressed ? styles.iconBtnPressed : null]}
-                >
-                  <Text style={styles.actionIcon}>{isSaved ? '❤️' : '🤍'}</Text>
-                </Pressable>
-                <Pressable
-                  onPress={handleShare}
-                  accessibilityLabel="Compartilhar versículo"
-                  style={({ pressed }) => [styles.iconBtn, pressed ? styles.iconBtnPressed : null]}
-                >
-                  <Text style={styles.actionIcon}>📤</Text>
-                </Pressable>
+        {data ? (
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={handleToggleFavorite}
+              accessibilityLabel="Salvar versículo nos favoritos"
+              style={({ pressed }) => [
+                styles.iconBtn,
+                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                pressed && styles.iconBtnPressed,
+              ]}
+            >
+              <Text style={styles.actionIcon}>{isSaved ? '❤️' : '🤍'}</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleShare}
+              accessibilityLabel="Compartilhar versículo"
+              style={({ pressed }) => [
+                styles.iconBtn,
+                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                pressed && styles.iconBtnPressed,
+              ]}
+            >
+              <Text style={styles.actionIcon}>📤</Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
+
+      {toastMessage ? (
+        <View style={[styles.toastBox, { backgroundColor: theme.surfaceSubtle }]}>
+          <Text style={[styles.toastText, { color: theme.textSecondary }]}>
+            {toastMessage}
+          </Text>
+        </View>
+      ) : null}
+
+      {isPending ? (
+        <StateMessage variant="loading" message="Buscando uma palavra de paz..." />
+      ) : error && !data ? (
+        <StateMessage
+          variant="error"
+          message="Não foi possível buscar a Palavra no momento. Verifique sua conexão."
+          onRetry={handleAnother}
+          retryLabel="Tentar novamente"
+        />
+      ) : data ? (
+        <>
+          <View style={[styles.verseBody, isFetching && styles.refreshing]}>
+            <Text
+              style={[styles.verseText, { color: theme.textPrimary }]}
+              testID="verse-of-the-day-text"
+            >
+              “{data.verse.text}”
+            </Text>
+
+            <View style={styles.metaRow}>
+              <View
+                style={[
+                  styles.referenceBadge,
+                  { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+                ]}
+              >
+                <Text style={[styles.referenceText, { color: theme.accentText }]}>
+                  {data.reference}
+                </Text>
               </View>
-            ) : null}
+              <Text style={[styles.translationText, { color: theme.textMuted }]}>
+                {data.translationName}
+              </Text>
+            </View>
           </View>
 
-          {toastMessage ? (
-            <View style={styles.toastBox}>
-              <Text style={styles.toastText}>{toastMessage}</Text>
+          {error ? (
+            <Text style={[styles.inlineError, { color: theme.textMuted }]}>
+              {error.message}
+            </Text>
+          ) : null}
+
+          <View style={styles.buttonRow}>
+            <View style={styles.buttonWrapper}>
+              <Button
+                label="Outro Versículo"
+                variant="primary"
+                size="md"
+                onPress={handleAnother}
+                loading={isFetching}
+                testID="verse-of-the-day-refresh"
+              />
             </View>
-          ) : null}
-
-          {isPending ? (
-            <StateMessage variant="loading" message="Buscando uma palavra de paz..." />
-          ) : error && !data ? (
-            <StateMessage
-              variant="error"
-              message="Não foi possível buscar a Palavra no momento. Verifique sua conexão."
-              onRetry={handleAnother}
-              retryLabel="Tentar novamente"
-            />
-          ) : data ? (
-            <>
-              <View style={[styles.verseBody, isFetching ? styles.refreshing : null]}>
-                <Text style={styles.openQuote}>“</Text>
-                <Text style={styles.verseText} testID="verse-of-the-day-text">
-                  {data.verse.text}
-                </Text>
-                <Text style={styles.closeQuote}>”</Text>
-
-                <View style={styles.metaRow}>
-                  <View style={styles.referenceBadge}>
-                    <Text style={styles.referenceText}>{data.reference}</Text>
-                  </View>
-                  <Text style={styles.translationText}>{data.translationName}</Text>
-                </View>
-              </View>
-
-              {error ? <Text style={styles.inlineError}>{error.message}</Text> : null}
-
-              <View style={styles.buttonRow}>
-                <View style={styles.buttonWrapper}>
-                  <Button
-                    label="Outro Versículo"
-                    variant="primary"
-                    size="md"
-                    onPress={handleAnother}
-                    loading={isFetching}
-                    testID="verse-of-the-day-refresh"
-                  />
-                </View>
-                <View style={styles.buttonWrapper}>
-                  <Button
-                    label="Ler Capítulo"
-                    variant="glass"
-                    size="md"
-                    onPress={handleReadChapter}
-                  />
-                </View>
-              </View>
-            </>
-          ) : null}
-        </View>
-      </BlurView>
+            <View style={styles.buttonWrapper}>
+              <Button
+                label="Ler Capítulo"
+                variant="secondary"
+                size="md"
+                onPress={handleReadChapter}
+              />
+            </View>
+          </View>
+        </>
+      ) : null}
     </View>
   );
 });
@@ -164,19 +188,10 @@ VerseOfTheDayCard.displayName = 'VerseOfTheDayCard';
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    borderWidth: 1.2,
-    borderColor: colors.borderGold,
-    marginBottom: spacing.lg,
-    ...shadows.glassGlow,
-  },
-  blurContainer: {
-    width: '100%',
-  },
-  innerCard: {
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
     padding: spacing.lg,
-    backgroundColor: 'rgba(17, 23, 38, 0.45)',
+    marginBottom: spacing.lg,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -185,23 +200,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   badgeWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.12)',
-    paddingHorizontal: spacing.sm + 4,
-    paddingVertical: 6,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.borderGold,
-  },
-  badgeIcon: {
-    fontSize: 12,
-    marginRight: 4,
+    paddingVertical: 2,
   },
   badgeText: {
-    fontSize: typography.fontSize.xs - 1,
+    fontSize: 11,
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
     letterSpacing: typography.letterSpacing.extraWide,
   },
   headerActions: {
@@ -209,105 +212,71 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   iconBtn: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: colors.borderGlassDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconBtnPressed: {
-    opacity: 0.75,
-    transform: [{ scale: 0.94 }],
+    opacity: 0.7,
   },
   actionIcon: {
-    fontSize: 16,
+    fontSize: 14,
   },
   toastBox: {
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
-    borderRadius: borderRadius.full,
-    paddingVertical: 6,
+    paddingVertical: spacing.xs + 2,
     paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.sm,
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    alignSelf: 'center',
   },
   toastText: {
-    color: colors.primaryLight,
     fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
+    textAlign: 'center',
   },
   verseBody: {
-    backgroundColor: 'rgba(10, 14, 24, 0.55)',
-    borderRadius: borderRadius.lg,
-    padding: spacing.md + 2,
-    marginBottom: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-    borderWidth: 1,
-    borderColor: colors.borderGlassDark,
+    paddingVertical: spacing.xs,
   },
   refreshing: {
     opacity: 0.5,
   },
-  openQuote: {
-    color: colors.primary,
-    fontSize: 34,
-    lineHeight: 34,
-    fontWeight: typography.fontWeight.bold,
-  },
-  closeQuote: {
-    color: colors.primary,
-    fontSize: 34,
-    lineHeight: 22,
-    fontWeight: typography.fontWeight.bold,
-    alignSelf: 'flex-end',
-  },
   verseText: {
-    color: colors.textPrimaryDark,
-    fontSize: typography.fontSize.md + 1,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.regular,
     lineHeight: 28,
     fontStyle: 'italic',
-    marginVertical: spacing.xs,
+    letterSpacing: 0.2,
+    marginBottom: spacing.md,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.sm,
-    paddingTop: spacing.xs + 2,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderGlassDark,
+    marginBottom: spacing.md,
   },
   referenceBadge: {
-    backgroundColor: 'rgba(212, 175, 55, 0.12)',
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.borderGold,
   },
   referenceText: {
-    color: colors.primary,
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs + 1,
     fontWeight: typography.fontWeight.bold,
   },
   translationText: {
-    color: colors.textSecondaryDark,
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.medium,
   },
   inlineError: {
-    color: colors.warning,
     fontSize: typography.fontSize.xs,
     marginBottom: spacing.sm,
   },
   buttonRow: {
     flexDirection: 'row',
     gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   buttonWrapper: {
     flex: 1,

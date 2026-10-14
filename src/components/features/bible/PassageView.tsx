@@ -1,27 +1,47 @@
 import { memo, useCallback } from 'react';
 import { FlatList, ListRenderItem, StyleSheet, Text, View } from 'react-native';
 import { Passage, Verse } from '@/types/bible';
-import { colors, spacing, typography, borderRadius } from '@/constants/theme';
+import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Props {
   passage: Passage;
 }
 
-const VerseRow = memo(({ verse }: { verse: Verse }) => (
-  <View style={styles.row}>
-    <Text style={styles.verseNumber}>{verse.verse}</Text>
-    <Text style={styles.verseText}>{verse.text}</Text>
+const VerseRow = memo(({ verse, textPrimary, borderSubtle, accentText, accentSoft }: {
+  verse: Verse;
+  textPrimary: string;
+  borderSubtle: string;
+  accentText: string;
+  accentSoft: string;
+}) => (
+  <View style={[styles.row, { borderBottomColor: borderSubtle }]}>
+    <View style={[styles.numberBadge, { backgroundColor: accentSoft }]}>
+      <Text style={[styles.verseNumber, { color: accentText }]}>{verse.verse}</Text>
+    </View>
+    <Text style={[styles.verseText, { color: textPrimary }]}>{verse.text}</Text>
   </View>
 ));
 VerseRow.displayName = 'VerseRow';
 
-/* Alturas variáveis (texto livre) inviabilizam getItemLayout; compensamos com
-   keyExtractor estável, itens memoizados e janela de renderização reduzida. */
 const keyExtractor = (v: Verse): string => `${v.bookId}-${v.chapter}-${v.verse}`;
 
-/** P2 — Lista virtualizada dos versículos de uma passagem. */
+/** Lista virtualizada dos versículos em formato editorial clean pastel. */
 export const PassageView = memo(({ passage }: Props) => {
-  const renderItem: ListRenderItem<Verse> = useCallback(({ item }) => <VerseRow verse={item} />, []);
+  const { theme } = useTheme();
+
+  const renderItem: ListRenderItem<Verse> = useCallback(
+    ({ item }) => (
+      <VerseRow
+        verse={item}
+        textPrimary={theme.textPrimary}
+        borderSubtle={theme.divider}
+        accentText={theme.accentText}
+        accentSoft={theme.accentSoft}
+      />
+    ),
+    [theme],
+  );
 
   return (
     <FlatList
@@ -34,11 +54,25 @@ export const PassageView = memo(({ passage }: Props) => {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={styles.reference} testID="passage-reference">
+        <View
+          style={[
+            styles.header,
+            shadows.soft,
+            {
+              backgroundColor: theme.surfaceCard,
+              borderColor: theme.borderSubtle,
+            },
+          ]}
+        >
+          <Text
+            style={[styles.reference, { color: theme.textPrimary }]}
+            testID="passage-reference"
+          >
             {passage.reference}
           </Text>
-          <Text style={styles.translation}>{passage.translationName}</Text>
+          <Text style={[styles.translation, { color: theme.textSecondary }]}>
+            {passage.translationName}
+          </Text>
         </View>
       }
     />
@@ -52,41 +86,41 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   header: {
-    backgroundColor: colors.surfaceDark,
-    borderColor: colors.borderGold,
-    borderWidth: 1.5,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md + 2,
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
     marginBottom: spacing.md,
   },
   reference: {
-    color: colors.primary,
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   translation: {
-    color: colors.textMutedDark,
     fontSize: typography.fontSize.xs,
     marginTop: spacing.xs,
   },
   row: {
     flexDirection: 'row',
-    paddingVertical: spacing.sm + 2,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderDark,
+    paddingVertical: spacing.sm + 4,
+    borderBottomWidth: 1,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  numberBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: borderRadius.xs,
+    marginTop: 2,
   },
   verseNumber: {
-    color: colors.primary,
-    fontSize: typography.fontSize.xs,
+    fontSize: 11,
     fontWeight: typography.fontWeight.bold,
-    width: spacing.lg + 4,
-    paddingTop: 3,
   },
   verseText: {
     flex: 1,
-    color: colors.textPrimaryDark,
     fontSize: typography.fontSize.md,
     lineHeight: 26,
+    letterSpacing: 0.2,
   },
 });

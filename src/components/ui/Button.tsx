@@ -4,14 +4,12 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  StyleProp,
-  ViewStyle,
-  TextStyle,
   Animated,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { ButtonProps } from '@/types';
-import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
+import { spacing, borderRadius, typography, shadows } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 export const Button = memo(
   ({
@@ -24,6 +22,7 @@ export const Button = memo(
     testID,
     hapticFeedback = true,
   }: ButtonProps) => {
+    const { theme } = useTheme();
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = useCallback(() => {
@@ -33,12 +32,12 @@ export const Button = memo(
         try {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         } catch {
-          // Fallback silencioso em plataformas sem suporte a vibração
+          // Fallback silencioso
         }
       }
 
       Animated.spring(scaleAnim, {
-        toValue: 0.965,
+        toValue: 0.97,
         useNativeDriver: true,
         speed: 50,
         bounciness: 4,
@@ -60,20 +59,27 @@ export const Button = memo(
       }
     }, [disabled, loading, onPress]);
 
-    const buttonStyle: StyleProp<ViewStyle> = [
-      styles.base,
-      styles[variant],
-      styles[size],
-      variant === 'primary' && !disabled ? shadows.glassGlow : null,
-      disabled ? styles.disabled : null,
-    ];
+    // Cores dinâmicas de acordo com o tema e a variante pastel
+    let btnBg = theme.accent;
+    let textColor = theme.accentText;
+    let borderColor = 'transparent';
 
-    const textStyle: StyleProp<TextStyle> = [
-      styles.textBase,
-      styles[`${variant}Text` as keyof typeof styles] as TextStyle,
-      styles[`${size}Text` as keyof typeof styles] as TextStyle,
-      disabled ? styles.disabledText : null,
-    ];
+    if (variant === 'secondary') {
+      btnBg = theme.surfaceSubtle;
+      textColor = theme.textPrimary;
+      borderColor = theme.borderSubtle;
+    } else if (variant === 'outline') {
+      btnBg = 'transparent';
+      textColor = theme.textPrimary;
+      borderColor = theme.border;
+    } else if (variant === 'ghost') {
+      btnBg = 'transparent';
+      textColor = theme.textSecondary;
+    } else if (variant === 'glass') {
+      btnBg = theme.surfaceSubtle;
+      textColor = theme.textPrimary;
+      borderColor = theme.borderSubtle;
+    }
 
     return (
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -83,19 +89,30 @@ export const Button = memo(
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           disabled={disabled || loading}
-          style={buttonStyle}
+          style={[
+            styles.base,
+            styles[size],
+            variant === 'primary' && !disabled ? shadows.soft : null,
+            {
+              backgroundColor: btnBg,
+              borderColor,
+              borderWidth: borderColor !== 'transparent' ? 1 : 0,
+              opacity: disabled ? 0.45 : 1,
+            },
+          ]}
         >
           {loading ? (
-            <ActivityIndicator
-              size="small"
-              color={
-                variant === 'outline' || variant === 'ghost' || variant === 'glass'
-                  ? colors.primary
-                  : '#080B11'
-              }
-            />
+            <ActivityIndicator size="small" color={textColor} />
           ) : (
-            <Text style={textStyle}>{label}</Text>
+            <Text
+              style={[
+                styles.textBase,
+                styles[`${size}Text`],
+                { color: textColor },
+              ]}
+            >
+              {label}
+            </Text>
           )}
         </Pressable>
       </Animated.View>
@@ -112,25 +129,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: colors.secondary,
-  },
-  glass: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
   sm: {
     paddingVertical: spacing.xs + 3,
     paddingHorizontal: spacing.md,
@@ -143,32 +141,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.xl,
   },
-  disabled: {
-    opacity: 0.45,
-  },
   textBase: {
     fontWeight: typography.fontWeight.semibold,
     textAlign: 'center',
     letterSpacing: typography.letterSpacing.normal,
-  },
-  primaryText: {
-    color: '#080B11',
-    fontWeight: typography.fontWeight.bold,
-  },
-  secondaryText: {
-    color: '#FFFFFF',
-    fontWeight: typography.fontWeight.semibold,
-  },
-  glassText: {
-    color: colors.textPrimaryDark,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  outlineText: {
-    color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  ghostText: {
-    color: colors.primaryLight,
   },
   smText: {
     fontSize: typography.fontSize.sm,
@@ -178,8 +154,5 @@ const styles = StyleSheet.create({
   },
   lgText: {
     fontSize: typography.fontSize.lg,
-  },
-  disabledText: {
-    color: colors.textMutedDark,
   },
 });

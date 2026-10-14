@@ -1,7 +1,8 @@
 import { memo, useState } from 'react';
 import { TextInput, StyleSheet } from 'react-native';
 import { TextFieldProps } from '@/types';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import { spacing, borderRadius, typography } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 export const TextField = memo(
   ({
@@ -13,6 +14,7 @@ export const TextField = memo(
     accessibilityLabel,
     testID,
   }: TextFieldProps) => {
+    const { theme } = useTheme();
     const [focused, setFocused] = useState(false);
 
     return (
@@ -21,7 +23,7 @@ export const TextField = memo(
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.textMutedDark}
+        placeholderTextColor={theme.textMuted}
         onSubmitEditing={onSubmitEditing}
         autoFocus={autoFocus}
         returnKeyType="search"
@@ -30,7 +32,15 @@ export const TextField = memo(
         accessibilityLabel={accessibilityLabel ?? placeholder}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        style={[styles.input, focused ? styles.focused : null]}
+        style={[
+          styles.input,
+          {
+            backgroundColor: theme.surfaceSubtle,
+            borderColor: focused ? theme.accent : theme.borderSubtle,
+            color: theme.textPrimary,
+          },
+          focused ? styles.focused : null,
+        ]}
       />
     );
   },
@@ -40,16 +50,13 @@ TextField.displayName = 'TextField';
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: colors.surfaceSubtleDark,
-    borderColor: colors.borderDark,
-    borderWidth: 1.5,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md + 2,
     paddingVertical: spacing.sm + 4,
-    color: colors.textPrimaryDark,
     fontSize: typography.fontSize.md,
   },
   focused: {
-    borderColor: colors.primary,
+    borderWidth: 1.5,
   },
 });

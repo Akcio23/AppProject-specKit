@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, StateMessage, TextField } from '@/components/ui';
 import { PassageView } from '@/components/features/bible';
 import { usePassage } from '@/hooks/usePassage';
 import { useBibleStore } from '@/stores/useBibleStore';
 import { RootStackScreenProps } from '@/navigation/types';
-import { colors, spacing, typography, borderRadius } from '@/constants/theme';
+import { spacing, typography, borderRadius } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 const EXAMPLES = [
   'João 3:16',
@@ -18,9 +19,10 @@ const EXAMPLES = [
   'Salmos 91:1-2',
 ] as const;
 
-/** Busca de passagens por referência focada, limpa e sem distrações. */
+/** Busca de passagens por referência em estética clean pastel. */
 export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>) {
   const insets = useSafeAreaInsets();
+  const { theme, isDark, toggleTheme } = useTheme();
   const initialReference = route.params?.initialReference ?? '';
 
   const [query, setQuery] = useState(initialReference);
@@ -47,8 +49,10 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
     if (submitted.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>📖 Passagens Recomendadas</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>
+            📖 Passagens Sugeridas
+          </Text>
+          <Text style={[styles.emptySubtitle, { color: theme.textSecondary }]}>
             Toque em um exemplo para ler instantaneamente ou digite uma referência acima:
           </Text>
           <View style={styles.examples}>
@@ -56,10 +60,17 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
               <Pressable
                 key={ex}
                 onPress={() => handleExample(ex)}
-                style={({ pressed }) => [styles.example, pressed ? styles.examplePressed : null]}
+                style={({ pressed }) => [
+                  styles.example,
+                  {
+                    backgroundColor: theme.surfaceCard,
+                    borderColor: theme.borderSubtle,
+                  },
+                  pressed && styles.examplePressed,
+                ]}
                 accessibilityRole="button"
               >
-                <Text style={styles.exampleText}>{ex}</Text>
+                <Text style={[styles.exampleText, { color: theme.textPrimary }]}>{ex}</Text>
               </Pressable>
             ))}
           </View>
@@ -90,8 +101,18 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom + spacing.sm }]}>
-      {/* Barra de pesquisa */}
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.background,
+          paddingBottom: insets.bottom + spacing.sm,
+        },
+      ]}
+    >
+      <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
+
+      {/* Barra de pesquisa clean */}
       <View style={styles.searchRow}>
         <View style={styles.inputWrapper}>
           <TextField
@@ -111,14 +132,33 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
           loading={passage.isFetching}
           testID="bible-search-submit"
         />
+        <Pressable
+          onPress={toggleTheme}
+          style={({ pressed }) => [
+            styles.themeToggleBtn,
+            {
+              backgroundColor: theme.surfaceCard,
+              borderColor: theme.borderSubtle,
+            },
+            pressed && styles.themeToggleBtnPressed,
+          ]}
+          accessibilityLabel="Alternar tema"
+        >
+          <Text style={styles.themeToggleText}>{isDark ? '☀️' : '🌙'}</Text>
+        </Pressable>
       </View>
 
-      {/* Indicador discreto da tradução ativa */}
+      {/* Indicador discreto da versão ativa */}
       <View style={styles.versionBar}>
-        <Text style={styles.versionLabel}>
-          Versão ativa: <Text style={styles.versionHighlight}>{translationId.toUpperCase()}</Text>
+        <Text style={[styles.versionLabel, { color: theme.textMuted }]}>
+          Versão:{' '}
+          <Text style={[styles.versionHighlight, { color: theme.accentText }]}>
+            {translationId.toUpperCase()}
+          </Text>
         </Text>
-        <Text style={styles.versionHint}>Para trocar a versão, use a aba Ajustes ⚙️</Text>
+        <Text style={[styles.versionHint, { color: theme.textMuted }]}>
+          Troque de versão no menu Ajustes ⚙️
+        </Text>
       </View>
 
       <View style={styles.body}>{renderBody()}</View>
@@ -129,17 +169,30 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundDark,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
   },
   searchRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.xs + 2,
     alignItems: 'center',
   },
   inputWrapper: {
     flex: 1,
+  },
+  themeToggleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeToggleBtnPressed: {
+    opacity: 0.7,
+  },
+  themeToggleText: {
+    fontSize: 16,
   },
   versionBar: {
     flexDirection: 'row',
@@ -151,15 +204,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   versionLabel: {
-    color: colors.textMutedDark,
     fontSize: typography.fontSize.xs,
   },
   versionHighlight: {
-    color: colors.primary,
     fontWeight: typography.fontWeight.bold,
   },
   versionHint: {
-    color: colors.textMutedDark,
     fontSize: 10,
     fontStyle: 'italic',
   },
@@ -173,12 +223,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: typography.fontSize.sm + 1,
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMutedDark,
     lineHeight: 18,
     marginBottom: spacing.md,
   },
@@ -191,19 +239,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   example: {
-    backgroundColor: colors.surfaceDark,
-    borderColor: colors.borderGold,
     borderWidth: 1,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm + 4,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.xs + 3,
   },
   examplePressed: {
-    backgroundColor: colors.surfaceSubtleDark,
-    borderColor: colors.primary,
+    opacity: 0.8,
   },
   exampleText: {
-    color: colors.textPrimaryDark,
     fontSize: typography.fontSize.xs + 1,
     fontWeight: typography.fontWeight.medium,
   },

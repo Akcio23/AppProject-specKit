@@ -1,52 +1,147 @@
+/**
+ * Design System Clean Pastel - Bíblia Sagrada Mobile
+ * Paleta serena em tons pastéis: branco suave, marrom terroso, preto aveludado e amarelo opaco suave.
+ */
+
+export const pastelPalette = {
+  // Brancos & Alabastro
+  white: '#FFFFFF',
+  linen: '#FAF8F5', // Fundo diurno suave como página de livro pólen
+  parchment: '#F3EFE8', // Superfície sutil para cards claros
+  cream: '#ECE6DC', // Borda e divisores claros
+
+  // Marrons & Taupe
+  brownDark: '#261E19', // Café profundo (para texto e acentos)
+  brownMedium: '#5C4E43', // Marrom suave editorial
+  brownMuted: '#8C7E72', // Taupe delicado para subtítulos
+  brownSurface: '#24201D', // Superfície de card escuro com matiz marrom quente
+
+  // Pretos Foscos & Carvão
+  charcoalDark: '#161514', // Fundo noturno aveludado (preto suave, não estourado)
+  charcoalSurface: '#1F1D1B', // Card escuro acolhedor
+  charcoalSubtle: '#292623', // Pílulas e chips noturnos
+  charcoalBorder: '#36322E', // Borda noturna sutil
+
+  // Amarelo Opaco Pastel (Manteiga & Trigo Dourado Suave - sem neon)
+  yellowPastel: '#DFC87B', // Amarelo opaco nobre para destaques
+  yellowPastelLight: '#F5EBC7', // Amarelo manteiga suave para fundos de badges
+  yellowPastelDark: '#3A3420', // Amarelo opaco profundo para modo escuro
+  yellowPastelMuted: '#8A7A48',
+
+  // Tons de Feedback Suaves
+  successPastel: '#4E937A',
+  errorPastel: '#C25953',
+  warningPastel: '#C98A4B',
+} as const;
+
+export interface AppTheme {
+  isDark: boolean;
+  background: string;
+  backgroundSecondary: string;
+  surface: string;
+  surfaceSubtle: string;
+  surfaceCard: string;
+  surfaceFloat: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  accent: string;
+  accentSoft: string;
+  accentText: string;
+  border: string;
+  borderSubtle: string;
+  divider: string;
+  quoteBorder: string;
+  statusBar: 'light-content' | 'dark-content';
+}
+
+export const lightTheme: AppTheme = {
+  isDark: false,
+  background: pastelPalette.linen,
+  backgroundSecondary: pastelPalette.parchment,
+  surface: pastelPalette.white,
+  surfaceSubtle: pastelPalette.parchment,
+  surfaceCard: pastelPalette.white,
+  surfaceFloat: 'rgba(255, 255, 255, 0.94)',
+  textPrimary: pastelPalette.brownDark,
+  textSecondary: pastelPalette.brownMedium,
+  textMuted: pastelPalette.brownMuted,
+  accent: pastelPalette.yellowPastel,
+  accentSoft: pastelPalette.yellowPastelLight,
+  accentText: '#594612',
+  border: pastelPalette.cream,
+  borderSubtle: '#E8E1D5',
+  divider: 'rgba(92, 78, 67, 0.08)',
+  quoteBorder: pastelPalette.yellowPastel,
+  statusBar: 'dark-content',
+};
+
+export const darkTheme: AppTheme = {
+  isDark: true,
+  background: pastelPalette.charcoalDark,
+  backgroundSecondary: pastelPalette.charcoalSurface,
+  surface: pastelPalette.charcoalSurface,
+  surfaceSubtle: pastelPalette.charcoalSubtle,
+  surfaceCard: pastelPalette.charcoalSurface,
+  surfaceFloat: 'rgba(31, 29, 27, 0.94)',
+  textPrimary: '#F6F3EE',
+  textSecondary: '#BDB3A6',
+  textMuted: '#7D756C',
+  accent: pastelPalette.yellowPastel,
+  accentSoft: pastelPalette.yellowPastelDark,
+  accentText: '#F7EDCA',
+  border: pastelPalette.charcoalBorder,
+  borderSubtle: 'rgba(255, 255, 255, 0.06)',
+  divider: 'rgba(255, 255, 255, 0.06)',
+  quoteBorder: pastelPalette.yellowPastel,
+  statusBar: 'light-content',
+};
+
+/** Compatibilidade retroativa */
 export const colors = {
-  primary: '#D4AF37', // Ouro Celestial Nobre
-  primaryDark: '#B48C28',
-  primaryLight: '#F3E5AB',
-  secondary: '#0D9488', // Verde Oliva / Serenidade
-  secondaryLight: '#14B8A6',
-  gold: '#D4AF37',
-  goldLight: '#FDF6E2',
-  goldDark: '#997300',
-  accentGoldGlow: 'rgba(212, 175, 55, 0.20)',
-  accentTeal: '#2DD4BF',
-  accentRose: '#FB7185',
+  primary: pastelPalette.yellowPastel,
+  primaryDark: '#BCA14F',
+  primaryLight: pastelPalette.yellowPastelLight,
+  secondary: pastelPalette.brownMedium,
+  secondaryLight: pastelPalette.brownMuted,
+  gold: pastelPalette.yellowPastel,
+  goldLight: pastelPalette.yellowPastelLight,
+  goldDark: '#8A7A48',
+  accentGoldGlow: 'rgba(223, 200, 123, 0.15)',
+  accentTeal: '#4E937A',
+  accentRose: '#C25953',
 
-  // Fundos & Superfícies Sólidas
-  backgroundDark: '#080B11', // Preto obsidiana profundo (sem cinza lavado)
-  backgroundLight: '#F8F9FA', // Alabastro suave
-  backgroundSecondaryDark: '#0F1523',
-  backgroundSecondaryLight: '#EEF2F6',
-  surfaceDark: '#111726',
-  surfaceLight: '#FFFFFF',
-  surfaceSubtleDark: '#182032',
-  surfaceSubtleLight: '#F1EFEA',
+  backgroundDark: pastelPalette.charcoalDark,
+  backgroundLight: pastelPalette.linen,
+  backgroundSecondaryDark: pastelPalette.charcoalSurface,
+  backgroundSecondaryLight: pastelPalette.parchment,
+  surfaceDark: pastelPalette.charcoalSurface,
+  surfaceLight: pastelPalette.white,
+  surfaceSubtleDark: pastelPalette.charcoalSubtle,
+  surfaceSubtleLight: pastelPalette.parchment,
 
-  // Superfícies de Vidro (Glassmorphism)
-  surfaceGlassDark: 'rgba(17, 23, 38, 0.72)',
-  surfaceGlassLight: 'rgba(255, 255, 255, 0.82)',
-  surfaceGlassHoverDark: 'rgba(28, 36, 56, 0.85)',
-  surfaceGlassHoverLight: 'rgba(255, 255, 255, 0.95)',
+  surfaceGlassDark: 'rgba(31, 29, 27, 0.88)',
+  surfaceGlassLight: 'rgba(255, 255, 255, 0.92)',
+  surfaceGlassHoverDark: 'rgba(41, 38, 35, 0.95)',
+  surfaceGlassHoverLight: 'rgba(250, 248, 245, 0.98)',
 
-  // Bordas Sutis & Translúcidas de 1px
-  borderDark: '#1E293B',
-  borderLight: '#E2E8F0',
-  borderGlassDark: 'rgba(255, 255, 255, 0.085)', // Reflexo de luz sutil no escuro
-  borderGlassLight: 'rgba(0, 0, 0, 0.06)',
-  borderGold: 'rgba(212, 175, 55, 0.40)',
+  borderDark: pastelPalette.charcoalBorder,
+  borderLight: pastelPalette.cream,
+  borderGlassDark: 'rgba(255, 255, 255, 0.06)',
+  borderGlassLight: 'rgba(92, 78, 67, 0.06)',
+  borderGold: 'rgba(223, 200, 123, 0.35)',
 
-  // Tipografia
-  textPrimaryDark: '#F8FAFC',
-  textPrimaryLight: '#0F172A',
-  textSecondaryDark: '#94A3B8',
-  textSecondaryLight: '#475569',
-  textMutedDark: '#64748B',
-  textMutedLight: '#94A3B8',
+  textPrimaryDark: '#F6F3EE',
+  textPrimaryLight: pastelPalette.brownDark,
+  textSecondaryDark: '#BDB3A6',
+  textSecondaryLight: pastelPalette.brownMedium,
+  textMutedDark: '#7D756C',
+  textMutedLight: pastelPalette.brownMuted,
 
-  // Feedback do Sistema
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  sacredAccent: '#E11D48',
+  success: pastelPalette.successPastel,
+  warning: pastelPalette.warningPastel,
+  error: pastelPalette.errorPastel,
+  sacredAccent: pastelPalette.yellowPastel,
 } as const;
 
 export const spacing = {
@@ -59,12 +154,12 @@ export const spacing = {
 } as const;
 
 export const borderRadius = {
-  xs: 8,
-  sm: 12,
-  md: 16,
-  lg: 24, // Generoso para cards e painéis
-  xl: 32, // Para modais e bottom sheets
-  full: 9999, // Pílulas e botões ovais
+  xs: 6,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 26,
+  full: 9999,
 } as const;
 
 export const typography = {
@@ -72,10 +167,10 @@ export const typography = {
     xs: 12,
     sm: 14,
     md: 16,
-    lg: 20,
-    xl: 24,
-    xxl: 32,
-    huge: 40,
+    lg: 19,
+    xl: 22,
+    xxl: 28,
+    huge: 34,
   },
   fontWeight: {
     regular: '400' as const,
@@ -85,34 +180,33 @@ export const typography = {
     heavy: '800' as const,
   },
   letterSpacing: {
-    tight: -0.5,
+    tight: -0.3,
     normal: 0,
-    wide: 0.5,
-    extraWide: 1.5,
+    wide: 0.4,
+    extraWide: 1.0,
   },
 } as const;
 
 export const shadows = {
   soft: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowColor: '#161514',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   glassGlow: {
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    elevation: 6,
+    shadowColor: '#161514',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
   },
   modal: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.35,
-    shadowRadius: 32,
-    elevation: 12,
+    shadowColor: '#161514',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 6,
   },
 } as const;
-

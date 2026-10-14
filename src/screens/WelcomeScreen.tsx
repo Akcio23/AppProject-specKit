@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Share, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { SideDrawer } from '@/components/ui';
@@ -10,12 +10,14 @@ import {
 } from '@/components/features/bible';
 import { useAppStore } from '@/stores/useAppStore';
 import { RootStackScreenProps } from '@/navigation/types';
-import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 type MainTopic = 'devocional' | 'temas' | 'guardados' | 'ajustes';
 
 export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome'>) => {
   const insets = useSafeAreaInsets();
+  const { theme, isDark, toggleTheme } = useTheme();
   const { savedVerses, removeSavedVerse } = useAppStore();
   const [activeTopic, setActiveTopic] = useState<MainTopic>('devocional');
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
@@ -48,7 +50,6 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
     return { title: 'Serena Noite de Luz 🌙', subtitle: 'Descanse seu coração na Palavra.' };
   }, []);
 
-
   const openSearch = useCallback(() => {
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -79,40 +80,71 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
       style={[
         styles.container,
         {
+          backgroundColor: theme.background,
           paddingTop: insets.top + spacing.sm,
           paddingBottom: insets.bottom + spacing.xs,
         },
       ]}
     >
-      {/* Cabeçalho Compacto & Acolhedor */}
+      <StatusBar
+        barStyle={theme.statusBar}
+        backgroundColor={theme.background}
+      />
+
+      {/* Cabeçalho Minimalista & Arejado */}
       <View style={styles.headerRow}>
         <Pressable
           onPress={handleOpenDrawer}
-          style={({ pressed }) => [styles.drawerToggleBtn, pressed && styles.drawerToggleBtnPressed]}
-          accessibilityLabel="Abrir menu de navegação lateral"
+          style={({ pressed }) => [
+            styles.headerIconBtn,
+            { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle },
+            pressed && styles.btnPressed,
+          ]}
+          accessibilityLabel="Abrir menu lateral"
         >
-          <View style={styles.hamburgerLine} />
-          <View style={[styles.hamburgerLine, { width: 14 }]} />
-          <View style={styles.hamburgerLine} />
+          <View style={[styles.hamburgerLine, { backgroundColor: theme.textPrimary }]} />
+          <View style={[styles.hamburgerLine, { width: 12, backgroundColor: theme.textPrimary }]} />
+          <View style={[styles.hamburgerLine, { backgroundColor: theme.textPrimary }]} />
         </Pressable>
 
-        <View style={styles.headerLeft}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>BÍBLIA SAGRADA</Text>
-          </View>
-          <Text style={styles.headerTitle}>{greeting.title}</Text>
-          <Text style={styles.headerSubtitle}>{greeting.subtitle}</Text>
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
+            {greeting.title}
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
+            {greeting.subtitle}
+          </Text>
         </View>
 
-        <Pressable
-          onPress={openSearch}
-          style={({ pressed }) => [styles.searchBtn, pressed ? styles.searchBtnPressed : null]}
-          accessibilityLabel="Abrir busca da Bíblia"
-        >
-          <Text style={styles.searchBtnIcon}>🔍</Text>
-        </Pressable>
-      </View>
+        <View style={styles.headerRightActions}>
+          {/* Botão de Alternância de Tema Claro / Escuro Rápido */}
+          <Pressable
+            onPress={toggleTheme}
+            style={({ pressed }) => [
+              styles.headerIconBtn,
+              { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle },
+              pressed && styles.btnPressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
+          >
+            <Text style={styles.headerActionIcon}>{isDark ? '☀️' : '🌙'}</Text>
+          </Pressable>
 
+          {/* Botão de Busca */}
+          <Pressable
+            onPress={openSearch}
+            style={({ pressed }) => [
+              styles.headerIconBtn,
+              { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle },
+              pressed && styles.btnPressed,
+            ]}
+            accessibilityLabel="Abrir busca da Bíblia"
+          >
+            <Text style={styles.headerActionIcon}>🔍</Text>
+          </Pressable>
+        </View>
+      </View>
 
       {/* Conteúdo Separado por Tópico */}
       <ScrollView
@@ -121,26 +153,37 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
       >
         {activeTopic === 'devocional' && (
           <View style={styles.topicPane}>
-            {/* Palavra do Dia com amplo espaço para respirar */}
+            {/* Palavra do Dia com design editorial pastel */}
             <VerseOfTheDayCard onReadChapter={openPassage} />
 
-            {/* Cartão de Meditação e Oração Diária */}
-            <View style={styles.prayerCard}>
+            {/* Cartão de Meditação e Oração Diária em tons pastéis */}
+            <View
+              style={[
+                styles.prayerCard,
+                shadows.soft,
+                {
+                  backgroundColor: theme.surfaceCard,
+                  borderColor: theme.borderSubtle,
+                },
+              ]}
+            >
               <View style={styles.prayerHeader}>
                 <Text style={styles.prayerIcon}>🙏</Text>
-                <Text style={styles.prayerTitle}>Momento de Oração</Text>
+                <Text style={[styles.prayerTitle, { color: theme.textPrimary }]}>
+                  Momento de Oração
+                </Text>
               </View>
-              <Text style={styles.prayerText}>
-                “Senhor, que a Tua palavra habite ricamente em meu coração hoje. Dê-me sabedoria nas decisões, paz em meio às tempestades e amor para com todos os que cruzarem o meu caminho. Amém.”
+              <Text style={[styles.prayerText, { color: theme.textSecondary }]}>
+                “Senhor, que a Tua palavra habite ricamente em meu coração hoje. Concede-me sabedoria para as decisões, serenidade nas provações e amor em cada atitude. Amém.”
               </Text>
             </View>
 
-            {/* Rodapé Devocional */}
-            <View style={styles.footer}>
-              <Text style={styles.footerQuote}>
+            {/* Rodapé Devocional Minimalista */}
+            <View style={[styles.footer, { borderTopColor: theme.divider }]}>
+              <Text style={[styles.footerQuote, { color: theme.textMuted }]}>
                 “Lâmpada para os meus pés é a tua palavra e luz para o meu caminho.”
               </Text>
-              <Text style={styles.footerRef}>Salmos 119:105</Text>
+              <Text style={[styles.footerRef, { color: theme.textSecondary }]}>Salmos 119:105</Text>
             </View>
           </View>
         )}
@@ -148,9 +191,11 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
         {activeTopic === 'temas' && (
           <View style={styles.topicPane}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>✨ Palavras para Cada Momento</Text>
-              <Text style={styles.sectionSubtitle}>
-                Selecione uma área do seu coração e leia as Escrituras sagradas
+              <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>
+                Palavras para Cada Momento
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                Selecione uma meditação para ler passagens inspiradoras
               </Text>
             </View>
             <DevotionalTopics onSelectTopic={openPassage} mode="grid" />
@@ -160,34 +205,73 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
         {activeTopic === 'guardados' && (
           <View style={styles.topicPane}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>❤️ Guardados no Coração</Text>
-              <Text style={styles.sectionSubtitle}>
-                Versículos que você salvou para meditar e orar a qualquer momento
+              <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>
+                Versículos Guardados
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                Palavras que você salvou no coração para orar e meditar
               </Text>
             </View>
 
             {savedVerses.length === 0 ? (
-              <View style={styles.emptySavedBox}>
+              <View
+                style={[
+                  styles.emptySavedBox,
+                  shadows.soft,
+                  {
+                    backgroundColor: theme.surfaceCard,
+                    borderColor: theme.borderSubtle,
+                  },
+                ]}
+              >
                 <Text style={styles.emptySavedIcon}>📖</Text>
-                <Text style={styles.emptySavedTitle}>Nenhum versículo guardado ainda</Text>
-                <Text style={styles.emptySavedText}>
-                  Quando encontrar um versículo especial na Palavra do Dia ou na leitura, toque no coração ❤️ para guardá-lo aqui.
+                <Text style={[styles.emptySavedTitle, { color: theme.textPrimary }]}>
+                  Nenhum versículo guardado ainda
+                </Text>
+                <Text style={[styles.emptySavedText, { color: theme.textSecondary }]}>
+                  Quando encontrar um versículo tocante, toque no coração ❤️ para guardá-lo aqui.
                 </Text>
               </View>
             ) : (
               <View style={styles.savedList}>
                 {savedVerses.map((item) => (
-                  <View key={item.reference} style={styles.savedCard}>
+                  <View
+                    key={item.reference}
+                    style={[
+                      styles.savedCard,
+                      shadows.soft,
+                      {
+                        backgroundColor: theme.surfaceCard,
+                        borderColor: theme.borderSubtle,
+                      },
+                    ]}
+                  >
                     <View style={styles.savedCardHeader}>
-                      <View style={styles.savedRefBadge}>
-                        <Text style={styles.savedReference}>{item.reference}</Text>
+                      <View
+                        style={[
+                          styles.savedRefBadge,
+                          {
+                            backgroundColor: theme.accentSoft,
+                            borderColor: theme.accent,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.savedReference, { color: theme.accentText }]}>
+                          {item.reference}
+                        </Text>
                       </View>
                       <View style={styles.savedActionsRow}>
                         <Pressable
                           onPress={() => handleShareSaved(item.reference, item.text, item.translation)}
                           hitSlop={8}
                           accessibilityLabel="Compartilhar versículo"
-                          style={styles.actionSmallBtn}
+                          style={[
+                            styles.actionSmallBtn,
+                            {
+                              backgroundColor: theme.surfaceSubtle,
+                              borderColor: theme.borderSubtle,
+                            },
+                          ]}
                         >
                           <Text style={styles.actionSmallIcon}>📤</Text>
                         </Pressable>
@@ -195,24 +279,36 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
                           onPress={() => removeSavedVerse(item.reference)}
                           hitSlop={8}
                           accessibilityLabel="Remover dos favoritos"
-                          style={styles.actionSmallBtn}
+                          style={[
+                            styles.actionSmallBtn,
+                            {
+                              backgroundColor: theme.surfaceSubtle,
+                              borderColor: theme.borderSubtle,
+                            },
+                          ]}
                         >
-                          <Text style={styles.actionSmallIcon}>✕</Text>
+                          <Text style={[styles.actionSmallIcon, { color: theme.textMuted }]}>✕</Text>
                         </Pressable>
                       </View>
                     </View>
 
-                    <Text style={styles.savedVerseText}>“{item.text}”</Text>
-                    <Text style={styles.savedTranslation}>{item.translation}</Text>
+                    <Text style={[styles.savedVerseText, { color: theme.textPrimary }]}>
+                      “{item.text}”
+                    </Text>
+                    <Text style={[styles.savedTranslation, { color: theme.textMuted }]}>
+                      {item.translation}
+                    </Text>
 
                     <Pressable
                       onPress={() => openPassage(item.reference)}
                       style={({ pressed }) => [
                         styles.readChapterLink,
-                        pressed ? styles.readChapterLinkPressed : null,
+                        pressed && styles.btnPressed,
                       ]}
                     >
-                      <Text style={styles.readChapterLinkText}>Ler passagem completa →</Text>
+                      <Text style={[styles.readChapterLinkText, { color: theme.textSecondary }]}>
+                        Ler passagem completa →
+                      </Text>
                     </Pressable>
                   </View>
                 ))}
@@ -224,33 +320,57 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
         {activeTopic === 'ajustes' && (
           <View style={styles.topicPane}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>⚙️ Versão & Configurações</Text>
-              <Text style={styles.sectionSubtitle}>
-                Escolha a tradução bíblica para leitura e estudo das Escrituras
+              <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>
+                Versão & Ajustes
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                Escolha a tradução das Escrituras para sua leitura diária
               </Text>
             </View>
 
-            <View style={styles.infoBanner}>
+            <View
+              style={[
+                styles.infoBanner,
+                {
+                  backgroundColor: theme.surfaceCard,
+                  borderColor: theme.borderSubtle,
+                  borderLeftColor: theme.accent,
+                },
+              ]}
+            >
               <Text style={styles.infoBannerIcon}>💡</Text>
-              <Text style={styles.infoBannerText}>
-                A tradução selecionada abaixo é aplicada em todo o app (Palavra do Dia e busca de passagens).
+              <Text style={[styles.infoBannerText, { color: theme.textSecondary }]}>
+                A versão selecionada é aplicada na Palavra do Dia e nas buscas bíblicas.
               </Text>
             </View>
 
             <SettingsTranslationList />
 
-            <View style={styles.appInfoCard}>
-              <Text style={styles.appInfoTitle}>📖 Sobre a Bíblia Sagrada Mobile</Text>
-              <Text style={styles.appInfoText}>
-                Aplicativo devocional desenvolvido com React Native e dados bíblicos fornecidos pela API pública bible-api.com. Feito para inspirar momentos de paz, oração e fé.
+            <View
+              style={[
+                styles.appInfoCard,
+                shadows.soft,
+                {
+                  backgroundColor: theme.surfaceCard,
+                  borderColor: theme.borderSubtle,
+                },
+              ]}
+            >
+              <Text style={[styles.appInfoTitle, { color: theme.textPrimary }]}>
+                📖 Sobre o Bíblia Sagrada Mobile
               </Text>
-              <Text style={styles.appInfoVersion}>Versão 1.0.0 • Domínio Público</Text>
+              <Text style={[styles.appInfoText, { color: theme.textSecondary }]}>
+                Um aplicativo devocional com design sereno em tons pastéis e dados bíblicos fornecidos pela API pública bible-api.com. Criado para inspirar paz, reflexão e comunhão.
+              </Text>
+              <Text style={[styles.appInfoVersion, { color: theme.textMuted }]}>
+                Versão 1.1.0 • Design Clean Pastel
+              </Text>
             </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Navbar lateral que se esconde à esquerda */}
+      {/* Navbar lateral retrátil */}
       <SideDrawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
@@ -268,7 +388,6 @@ WelcomeScreen.displayName = 'WelcomeScreen';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundDark,
     paddingHorizontal: spacing.md,
   },
   scrollContent: {
@@ -276,85 +395,48 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
     marginTop: spacing.xs,
   },
-  headerLeft: {
+  headerCenter: {
     flex: 1,
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(212, 175, 55, 0.12)',
-    borderColor: colors.borderGold,
-    borderWidth: 1,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    marginBottom: 6,
-  },
-  badgeText: {
-    color: colors.primary,
-    fontSize: 10,
-    fontWeight: typography.fontWeight.heavy,
-    letterSpacing: typography.letterSpacing.extraWide,
+    paddingHorizontal: spacing.sm,
   },
   headerTitle: {
-    fontSize: typography.fontSize.xxl - 4,
-    fontWeight: typography.fontWeight.heavy,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
     letterSpacing: typography.letterSpacing.tight,
-    color: colors.textPrimaryDark,
   },
   headerSubtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondaryDark,
+    fontSize: typography.fontSize.xs,
     marginTop: 2,
-    fontWeight: typography.fontWeight.medium,
   },
-  drawerToggleBtn: {
-    width: 46,
-    height: 46,
+  headerRightActions: {
+    flexDirection: 'row',
+    gap: spacing.xs + 2,
+  },
+  headerIconBtn: {
+    width: 38,
+    height: 38,
     borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm + 2,
-    gap: 4,
-    ...shadows.soft,
   },
-  drawerToggleBtnPressed: {
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
-    transform: [{ scale: 0.94 }],
+  btnPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.96 }],
   },
   hamburgerLine: {
-    width: 18,
+    width: 16,
     height: 2,
-    backgroundColor: colors.primary,
-    borderRadius: 2,
+    borderRadius: 1,
+    marginVertical: 1.5,
   },
-  searchBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: spacing.sm,
-    ...shadows.soft,
-  },
-  searchBtnPressed: {
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
-    transform: [{ scale: 0.94 }],
-  },
-  searchBtnIcon: {
-    fontSize: 18,
+  headerActionIcon: {
+    fontSize: 16,
   },
   topicPane: {
     paddingTop: spacing.xs,
@@ -366,21 +448,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
     marginBottom: 2,
   },
   sectionSubtitle: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMutedDark,
     lineHeight: 18,
   },
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceDark,
     borderRadius: borderRadius.md,
+    borderWidth: 1,
     borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
     padding: spacing.md,
     marginBottom: spacing.md,
     gap: spacing.sm,
@@ -391,44 +470,34 @@ const styles = StyleSheet.create({
   infoBannerText: {
     flex: 1,
     fontSize: typography.fontSize.xs,
-    color: colors.textMutedDark,
     lineHeight: 18,
   },
   appInfoCard: {
-    backgroundColor: 'rgba(17, 23, 38, 0.70)',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
     padding: spacing.lg,
     marginTop: spacing.lg,
     marginBottom: spacing.md,
-    ...shadows.soft,
   },
   appInfoTitle: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
     marginBottom: spacing.xs,
   },
   appInfoText: {
     fontSize: typography.fontSize.xs,
-    color: colors.textSecondaryDark,
     lineHeight: 18,
     marginBottom: spacing.sm,
   },
   appInfoVersion: {
     fontSize: 10,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.medium,
   },
   prayerCard: {
-    backgroundColor: 'rgba(17, 23, 38, 0.70)',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    ...shadows.soft,
   },
   prayerHeader: {
     flexDirection: 'row',
@@ -437,16 +506,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   prayerIcon: {
-    fontSize: 18,
+    fontSize: 16,
   },
   prayerTitle: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
   },
   prayerText: {
     fontSize: typography.fontSize.sm,
-    color: colors.textSecondaryDark,
     lineHeight: 22,
     fontStyle: 'italic',
   },
@@ -454,12 +521,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   savedCard: {
-    backgroundColor: 'rgba(17, 23, 38, 0.70)',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
-    padding: spacing.lg,
-    ...shadows.soft,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    padding: spacing.md + 2,
   },
   savedCardHeader: {
     flexDirection: 'row',
@@ -468,81 +532,66 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   savedRefBadge: {
-    backgroundColor: 'rgba(212, 175, 55, 0.12)',
     borderWidth: 1,
-    borderColor: colors.borderGold,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 2,
   },
   savedReference: {
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.bold,
-    color: colors.primary,
   },
   savedActionsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   actionSmallBtn: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceSubtleDark,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionSmallIcon: {
-    fontSize: 13,
-    color: colors.textMutedDark,
+    fontSize: 11,
   },
   savedVerseText: {
     fontSize: typography.fontSize.sm,
-    color: colors.textPrimaryDark,
     lineHeight: 22,
     fontStyle: 'italic',
     marginBottom: spacing.xs,
   },
   savedTranslation: {
-    fontSize: typography.fontSize.xs - 2,
-    color: colors.textMutedDark,
+    fontSize: 10,
     marginBottom: spacing.sm,
   },
   readChapterLink: {
     alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  readChapterLinkPressed: {
-    opacity: 0.7,
+    paddingVertical: 2,
   },
   readChapterLinkText: {
     fontSize: typography.fontSize.xs,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.medium,
   },
   emptySavedBox: {
-    backgroundColor: 'rgba(17, 23, 38, 0.70)',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
     padding: spacing.xl,
     alignItems: 'center',
     marginTop: spacing.sm,
-    ...shadows.soft,
   },
   emptySavedIcon: {
-    fontSize: 36,
+    fontSize: 32,
     marginBottom: spacing.sm,
   },
   emptySavedTitle: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textPrimaryDark,
     marginBottom: spacing.xs,
   },
   emptySavedText: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMutedDark,
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -550,21 +599,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.borderDark,
     marginTop: spacing.xs,
   },
   footerQuote: {
     fontSize: typography.fontSize.xs,
     fontStyle: 'italic',
-    color: colors.textMutedDark,
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: spacing.md,
   },
   footerRef: {
-    fontSize: typography.fontSize.xs - 1,
+    fontSize: 11,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.primary,
     marginTop: spacing.xs,
   },
 });

@@ -1,7 +1,8 @@
 import { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
+import { spacing, borderRadius, typography, shadows } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 export interface DevotionalTopicItem {
   id: string;
@@ -76,6 +77,8 @@ interface DevotionalTopicsProps {
 }
 
 export const DevotionalTopics = memo(({ onSelectTopic, mode = 'grid' }: DevotionalTopicsProps) => {
+  const { theme } = useTheme();
+
   const handlePress = useCallback(
     (reference: string) => {
       try {
@@ -102,18 +105,37 @@ export const DevotionalTopics = memo(({ onSelectTopic, mode = 'grid' }: Devotion
               onPress={() => handlePress(topic.reference)}
               style={({ pressed }) => [
                 styles.carouselCard,
-                pressed ? styles.cardPressed : null,
+                shadows.soft,
+                {
+                  backgroundColor: theme.surfaceCard,
+                  borderColor: theme.borderSubtle,
+                },
+                pressed && styles.cardPressed,
               ]}
             >
-              <View style={styles.iconCircle}>
+              <View
+                style={[
+                  styles.iconCircle,
+                  { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+                ]}
+              >
                 <Text style={styles.icon}>{topic.icon}</Text>
               </View>
-              <Text style={styles.topicTitle}>{topic.title}</Text>
-              <Text numberOfLines={1} style={styles.topicSubtitle}>
+              <Text style={[styles.topicTitle, { color: theme.textPrimary }]}>
+                {topic.title}
+              </Text>
+              <Text numberOfLines={1} style={[styles.topicSubtitle, { color: theme.textSecondary }]}>
                 {topic.subtitle}
               </Text>
-              <View style={styles.referenceBadge}>
-                <Text style={styles.referenceText}>{topic.reference}</Text>
+              <View
+                style={[
+                  styles.referenceBadge,
+                  { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                ]}
+              >
+                <Text style={[styles.referenceText, { color: theme.textPrimary }]}>
+                  {topic.reference}
+                </Text>
               </View>
             </Pressable>
           ))}
@@ -130,20 +152,43 @@ export const DevotionalTopics = memo(({ onSelectTopic, mode = 'grid' }: Devotion
           onPress={() => handlePress(topic.reference)}
           style={({ pressed }) => [
             styles.gridCard,
-            pressed ? styles.cardPressed : null,
+            shadows.soft,
+            {
+              backgroundColor: theme.surfaceCard,
+              borderColor: theme.borderSubtle,
+            },
+            pressed && styles.cardPressed,
           ]}
         >
           <View style={styles.gridHeader}>
-            <View style={styles.iconCircle}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+              ]}
+            >
               <Text style={styles.icon}>{topic.icon}</Text>
             </View>
-            <View style={styles.referenceBadge}>
-              <Text style={styles.referenceText}>{topic.reference}</Text>
+            <View
+              style={[
+                styles.referenceBadge,
+                { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+              ]}
+            >
+              <Text style={[styles.referenceText, { color: theme.accentText }]}>
+                {topic.reference}
+              </Text>
             </View>
           </View>
-          <Text style={styles.topicTitle}>{topic.title}</Text>
-          <Text style={styles.topicSubtitle}>{topic.subtitle}</Text>
-          <Text style={styles.readPrompt}>Toque para ler a passagem →</Text>
+          <Text style={[styles.topicTitle, { color: theme.textPrimary }]}>
+            {topic.title}
+          </Text>
+          <Text style={[styles.topicSubtitle, { color: theme.textSecondary }]}>
+            {topic.subtitle}
+          </Text>
+          <Text style={[styles.readPrompt, { color: theme.textMuted }]}>
+            Ler passagem →
+          </Text>
         </Pressable>
       ))}
     </View>
@@ -161,25 +206,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 2,
   },
   carouselCard: {
-    backgroundColor: 'rgba(17, 23, 38, 0.72)',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
-    padding: spacing.md + 2,
-    width: 172,
-    ...shadows.soft,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    width: 168,
   },
   gridContainer: {
-    gap: spacing.md,
+    gap: spacing.sm + 4,
     paddingBottom: spacing.lg,
   },
   gridCard: {
-    backgroundColor: 'rgba(17, 23, 38, 0.72)',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.2,
-    borderColor: colors.borderGlassDark,
-    padding: spacing.lg,
-    ...shadows.soft,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    padding: spacing.md + 2,
   },
   gridHeader: {
     flexDirection: 'row',
@@ -188,53 +227,44 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   cardPressed: {
-    transform: [{ scale: 0.975 }],
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(28, 36, 56, 0.85)',
+    opacity: 0.85,
+    transform: [{ scale: 0.985 }],
   },
   iconCircle: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(212, 175, 55, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.borderGold,
   },
   icon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   topicTitle: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
-    color: colors.textPrimaryDark,
     marginBottom: 2,
   },
   topicSubtitle: {
     fontSize: typography.fontSize.xs + 1,
-    color: colors.textMutedDark,
     marginBottom: spacing.sm,
     lineHeight: 18,
   },
   referenceBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surfaceSubtleDark,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.borderGold,
   },
   referenceText: {
     fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.primary,
+    fontWeight: typography.fontWeight.bold,
   },
   readPrompt: {
     fontSize: typography.fontSize.xs,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.medium,
     marginTop: spacing.xs,
   },
 });
