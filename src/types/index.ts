@@ -22,6 +22,26 @@ export interface CardProps {
   testID?: string;
 }
 
+export interface TextFieldProps {
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  onSubmitEditing?: () => void;
+  autoFocus?: boolean;
+  accessibilityLabel?: string;
+  testID?: string;
+}
+
+export type StateMessageVariant = 'loading' | 'error' | 'empty';
+
+export interface StateMessageProps {
+  variant: StateMessageVariant;
+  message: string;
+  onRetry?: () => void;
+  retryLabel?: string;
+  testID?: string;
+}
+
 export interface AppState {
   counter: number;
   isDarkMode: boolean;

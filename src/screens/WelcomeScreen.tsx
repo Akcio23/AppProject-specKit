@@ -1,13 +1,21 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card } from '@/components/ui';
+import { VerseOfTheDayCard } from '@/components/features/bible';
 import { useAppStore } from '@/stores/useAppStore';
+import { RootStackScreenProps } from '@/navigation/types';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
 
-export const WelcomeScreen = memo(() => {
+export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome'>) => {
   const insets = useSafeAreaInsets();
   const { counter, incrementCounter, resetCounter } = useAppStore();
+
+  const openSearch = useCallback(() => navigation.navigate('BibleSearch'), [navigation]);
+  const openChapter = useCallback(
+    (reference: string) => navigation.navigate('BibleSearch', { initialReference: reference }),
+    [navigation],
+  );
 
   return (
     <View
@@ -32,6 +40,18 @@ export const WelcomeScreen = memo(() => {
           <Text style={styles.subtitle}>
             Construído sob a metodologia Spec-Driven Development e os mais altos padrões do ecossistema mobile.
           </Text>
+        </View>
+
+        {/* SPEC 002 — Integração bible-api.com */}
+        <VerseOfTheDayCard onReadChapter={openChapter} />
+        <View style={styles.searchButton}>
+          <Button
+            label="🔍 Buscar na Bíblia"
+            variant="secondary"
+            size="lg"
+            onPress={openSearch}
+            testID="open-bible-search"
+          />
         </View>
 
         {/* Card de Demonstração de Estado Reativo (Zustand) */}
@@ -133,6 +153,9 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.textMutedDark,
     lineHeight: 20,
+  },
+  searchButton: {
+    marginBottom: spacing.md,
   },
   counterBox: {
     alignItems: 'center',
