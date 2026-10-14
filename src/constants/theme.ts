@@ -1,23 +1,29 @@
 export const colors = {
-  primary: '#6366F1', // Indigo vibrante
-  primaryDark: '#4F46E5',
-  primaryLight: '#818CF8',
-  secondary: '#10B981', // Esmeralda
-  backgroundDark: '#090D16',
-  backgroundLight: '#F8FAFC',
-  surfaceDark: '#131B2E',
+  primary: '#D4AF37', // Ouro Celestial Nobre
+  primaryDark: '#B48C28',
+  primaryLight: '#F3E5AB',
+  secondary: '#0D9488', // Verde Oliva / Serenidade
+  secondaryLight: '#14B8A6',
+  gold: '#D4AF37',
+  goldLight: '#FDF6E2',
+  goldDark: '#997300',
+  backgroundDark: '#090D16', // Noite contemplativa
+  backgroundLight: '#FBF9F5', // Pergaminho suave
+  surfaceDark: '#111726',
   surfaceLight: '#FFFFFF',
-  surfaceSubtleDark: '#1E293B',
-  surfaceSubtleLight: '#F1F5F9',
-  borderDark: '#223049',
-  borderLight: '#E2E8F0',
+  surfaceSubtleDark: '#1A2338',
+  surfaceSubtleLight: '#F3EFE7',
+  borderDark: '#202D45',
+  borderLight: '#E5DED3',
+  borderGold: 'rgba(212, 175, 55, 0.35)',
   textPrimaryDark: '#F8FAFC',
-  textPrimaryLight: '#0F172A',
+  textPrimaryLight: '#1E1B18',
   textMutedDark: '#94A3B8',
-  textMutedLight: '#64748B',
+  textMutedLight: '#6B655C',
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
+  sacredAccent: '#E11D48',
 } as const;
 
 export const spacing = {

@@ -42,10 +42,18 @@ export interface StateMessageProps {
   testID?: string;
 }
 
+export interface SavedVerse {
+  reference: string;
+  text: string;
+  translation: string;
+  savedAt: string;
+}
+
 export interface AppState {
-  counter: number;
   isDarkMode: boolean;
-  incrementCounter: () => void;
+  savedVerses: SavedVerse[];
   toggleDarkMode: () => void;
-  resetCounter: () => void;
+  saveVerse: (verse: Omit<SavedVerse, 'savedAt'>) => void;
+  removeSavedVerse: (reference: string) => void;
+  isVerseSaved: (reference: string) => boolean;
 }

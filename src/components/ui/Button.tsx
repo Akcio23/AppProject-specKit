@@ -111,7 +111,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: '#0F172A',
+    fontWeight: typography.fontWeight.bold,
   },
   secondaryText: {
     color: '#FFFFFF',

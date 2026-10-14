@@ -99,6 +99,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   chipTextSelected: {
-    color: colors.textPrimaryDark,
+    color: '#0F172A',
   },
 });

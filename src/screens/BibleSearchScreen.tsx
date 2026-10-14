@@ -2,16 +2,23 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, StateMessage, TextField } from '@/components/ui';
-import { PassageView, TranslationPicker } from '@/components/features/bible';
+import { PassageView } from '@/components/features/bible';
 import { usePassage } from '@/hooks/usePassage';
-import { useTranslations } from '@/hooks/useTranslations';
 import { useBibleStore } from '@/stores/useBibleStore';
 import { RootStackScreenProps } from '@/navigation/types';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
 
-const EXAMPLES = ['João 3:16', 'Salmos 23', 'Mateus 25:31-33,46', 'Romanos 8:28'] as const;
+const EXAMPLES = [
+  'João 3:16',
+  'Salmos 23',
+  'Filipenses 4:13',
+  'Romanos 8:28',
+  '1 Coríntios 13:4-7',
+  'Isaías 40:31',
+  'Salmos 91:1-2',
+] as const;
 
-/** P2/P3 — Busca de passagens por referência com seleção de tradução. */
+/** Busca de passagens por referência focada, limpa e sem distrações. */
 export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>) {
   const insets = useSafeAreaInsets();
   const initialReference = route.params?.initialReference ?? '';
@@ -20,9 +27,6 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
   const [submitted, setSubmitted] = useState(initialReference);
 
   const translationId = useBibleStore((s) => s.translationId);
-  const setTranslationId = useBibleStore((s) => s.setTranslationId);
-
-  const translations = useTranslations();
   const passage = usePassage(submitted, translationId);
 
   const handleSubmit = useCallback(() => {
@@ -42,8 +46,11 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
   const renderBody = () => {
     if (submitted.length === 0) {
       return (
-        <View>
-          <StateMessage variant="empty" message="Digite uma referência ou toque em um exemplo:" />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>📖 Passagens Recomendadas</Text>
+          <Text style={styles.emptySubtitle}>
+            Toque em um exemplo para ler instantaneamente ou digite uma referência acima:
+          </Text>
           <View style={styles.examples}>
             {EXAMPLES.map((ex) => (
               <Pressable
@@ -65,24 +72,32 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
     if (passage.error) {
       const canRetry = passage.error.code !== 'NOT_FOUND';
       return (
-        <StateMessage
-          variant="error"
-          message={passage.error.message}
-          onRetry={canRetry ? handleRetry : undefined}
-        />
+        <View style={styles.errorContainer}>
+          <StateMessage
+            variant="error"
+            message={
+              passage.error.code === 'NOT_FOUND'
+                ? `Referência "${submitted}" não encontrada. Verifique se o nome do livro e capítulo estão corretos (ex.: João 3:16 ou Salmos 23).`
+                : passage.error.message
+            }
+            onRetry={canRetry ? handleRetry : undefined}
+            retryLabel="Tentar novamente"
+          />
+        </View>
       );
     }
     return <PassageView passage={passage.data} />;
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + spacing.sm }]}>
+      {/* Barra de pesquisa */}
       <View style={styles.searchRow}>
         <View style={styles.inputWrapper}>
           <TextField
             value={query}
             onChangeText={setQuery}
-            placeholder="Ex.: João 3:16"
+            placeholder="Ex.: João 3:16 ou Salmos 23"
             onSubmitEditing={handleSubmit}
             autoFocus={initialReference.length === 0}
             accessibilityLabel="Referência bíblica"
@@ -98,15 +113,13 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
         />
       </View>
 
-      {translations.data ? (
-        <TranslationPicker
-          translations={translations.data}
-          selectedId={translationId}
-          onSelect={setTranslationId}
-        />
-      ) : translations.error ? (
-        <Text style={styles.hint}>Não foi possível carregar as traduções.</Text>
-      ) : null}
+      {/* Indicador discreto da tradução ativa */}
+      <View style={styles.versionBar}>
+        <Text style={styles.versionLabel}>
+          Versão ativa: <Text style={styles.versionHighlight}>{translationId.toUpperCase()}</Text>
+        </Text>
+        <Text style={styles.versionHint}>Para trocar a versão, use a aba Ajustes ⚙️</Text>
+      </View>
 
       <View style={styles.body}>{renderBody()}</View>
     </View>
@@ -128,23 +141,58 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flex: 1,
   },
-  hint: {
+  versionBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.xs,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  versionLabel: {
     color: colors.textMutedDark,
     fontSize: typography.fontSize.xs,
-    paddingVertical: spacing.sm,
+  },
+  versionHighlight: {
+    color: colors.primary,
+    fontWeight: typography.fontWeight.bold,
+  },
+  versionHint: {
+    color: colors.textMutedDark,
+    fontSize: 10,
+    fontStyle: 'italic',
   },
   body: {
     flex: 1,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  emptyContainer: {
+    paddingTop: spacing.md,
+  },
+  emptyTitle: {
+    fontSize: typography.fontSize.sm + 1,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textMutedDark,
+    lineHeight: 18,
+    marginBottom: spacing.md,
+  },
+  errorContainer: {
+    paddingTop: spacing.lg,
   },
   examples: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
     gap: spacing.sm,
   },
   example: {
-    borderColor: colors.primary,
+    backgroundColor: colors.surfaceDark,
+    borderColor: colors.borderGold,
     borderWidth: 1,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.sm + 4,
@@ -152,9 +200,11 @@ const styles = StyleSheet.create({
   },
   examplePressed: {
     backgroundColor: colors.surfaceSubtleDark,
+    borderColor: colors.primary,
   },
   exampleText: {
-    color: colors.primaryLight,
-    fontSize: typography.fontSize.sm,
+    color: colors.textPrimaryDark,
+    fontSize: typography.fontSize.xs + 1,
+    fontWeight: typography.fontWeight.medium,
   },
 });
