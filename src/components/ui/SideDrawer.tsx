@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { spacing, borderRadius, typography, shadows } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { useSessionStore } from '@/stores/useSessionStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(310, Math.floor(SCREEN_WIDTH * 0.82));
@@ -28,6 +29,8 @@ interface SideDrawerProps {
   activeId: string;
   onSelectMenu: (id: string) => void;
   onOpenSearch: () => void;
+  onPressSignIn?: () => void;
+  onPressSignUp?: () => void;
   savedCount?: number;
 }
 
@@ -37,10 +40,13 @@ export const SideDrawer = memo(({
   activeId,
   onSelectMenu,
   onOpenSearch,
+  onPressSignIn,
+  onPressSignUp,
   savedCount = 0,
 }: SideDrawerProps) => {
   const insets = useSafeAreaInsets();
   const { theme, isDark, toggleTheme } = useTheme();
+  const { status, user, signOut } = useSessionStore();
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH - 20)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
@@ -196,6 +202,91 @@ export const SideDrawer = memo(({
               <Text style={[styles.closeBtnText, { color: theme.textSecondary }]}>✕</Text>
             </Pressable>
           </View>
+
+          {/* Card de Perfil / Autenticação (SPEC 005) */}
+          {status === 'authenticated' && user ? (
+            <View
+              style={[
+                styles.accountCard,
+                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+              ]}
+            >
+              <View style={styles.accountInfoRow}>
+                <View
+                  style={[
+                    styles.avatarCircle,
+                    { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+                  ]}
+                >
+                  <Text style={[styles.avatarText, { color: theme.accentText }]}>
+                    {user.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.accountTextWrapper}>
+                  <Text style={[styles.accountName, { color: theme.textPrimary }]} numberOfLines={1}>
+                    {user.name}
+                  </Text>
+                  <Text style={[styles.accountEmail, { color: theme.textMuted }]} numberOfLines={1}>
+                    {user.email}
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => void signOut()}
+                style={({ pressed }) => [
+                  styles.logoutBtn,
+                  pressed && { opacity: 0.7 },
+                ]}
+                accessibilityLabel="Sair da conta"
+              >
+                <Text style={[styles.logoutBtnText, { color: theme.textSecondary }]}>
+                  Sair da conta →
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View
+              style={[
+                styles.accountCard,
+                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+              ]}
+            >
+              <Text style={[styles.guestTitle, { color: theme.textPrimary }]}>
+                Sua Conta Pessoal 👤
+              </Text>
+              <Text style={[styles.guestSubtitle, { color: theme.textMuted }]}>
+                Acesse para guardar seus versículos na nuvem.
+              </Text>
+              <View style={styles.authBtnRow}>
+                <Pressable
+                  onPress={() => {
+                    handleClose();
+                    onPressSignIn?.();
+                  }}
+                  style={[styles.authActionBtn, { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle }]}
+                >
+                  <Text style={[styles.authActionText, { color: theme.textPrimary }]}>Entrar</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    handleClose();
+                    onPressSignUp?.();
+                  }}
+                  style={[styles.authActionBtn, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}
+                >
+                  <Text style={[styles.authActionText, { color: theme.accentText, fontWeight: typography.fontWeight.bold }]}>
+                    Criar Conta
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
 
           {/* Toggle de Tema Claro / Escuro Rápido */}
           <Pressable
@@ -536,5 +627,73 @@ const styles = StyleSheet.create({
   quoteRef: {
     fontSize: 10,
     fontWeight: typography.fontWeight.bold,
+  },
+  accountCard: {
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  accountInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  avatarCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  accountTextWrapper: {
+    flex: 1,
+  },
+  accountName: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  accountEmail: {
+    fontSize: typography.fontSize.xs,
+  },
+  logoutBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  logoutBtnText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  guestTitle: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  guestSubtitle: {
+    fontSize: typography.fontSize.xs,
+    lineHeight: 16,
+  },
+  authBtnRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  authActionBtn: {
+    flex: 1,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authActionText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
   },
 });

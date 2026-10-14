@@ -3,6 +3,8 @@ import { DefaultTheme, DarkTheme, NavigationContainer, Theme } from '@react-navi
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
 import { BibleSearchScreen } from '@/screens/BibleSearchScreen';
+import { SignInScreen } from '@/screens/auth/SignInScreen';
+import { SignUpScreen } from '@/screens/auth/SignUpScreen';
 import { typography } from '@/constants/theme';
 import { RootStackParamList } from './types';
 import { useTheme } from '@/hooks/useTheme';
@@ -43,6 +45,16 @@ export function RootNavigator() {
           name="BibleSearch"
           component={BibleSearchScreen}
           options={{ title: 'Buscar na Bíblia' }}
+        />
+        <Stack.Screen
+          name="SignIn"
+          component={SignInScreen}
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="SignUp"
+          component={SignUpScreen}
+          options={{ presentation: 'modal', headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

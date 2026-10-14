@@ -9,14 +9,14 @@
 
 **Purpose**: Inicialização das ferramentas de backend, contêineres Docker locais e isolamento do bundler Metro.
 
-- [ ] T001 Criar arquivo de orquestração Docker para PostgreSQL 17 Alpine e Mailpit em docker-compose.yml
-- [ ] T002 Criar template de variáveis de ambiente do Docker em .env.docker.example e documentar em .env.example
-- [ ] T003 [P] Criar metro.config.js com blockList para impedir que o bundler do Expo indexe a pasta api/
-- [ ] T004 [P] Inicializar projeto NestJS 11 em api/package.json com TypeScript strict e scripts de build/dev
-- [ ] T005 [P] Configurar regras do agente e padrões de desenvolvimento em api/AGENTS.md
-- [ ] T006 [P] Configurar tsconfig.json e nest-cli.json em api/
-- [ ] T007 [P] Criar Dockerfile multi-stage com usuário não-root (node) e .dockerignore em api/Dockerfile
-- [ ] T008 Instalar dependências da API (NestJS, Prisma, Argon2, class-validator, helmet, etc.) em api/package.json
+- [x] T001 Criar arquivo de orquestração Docker para PostgreSQL 17 Alpine e Mailpit em docker-compose.yml
+- [x] T002 Criar template de variáveis de ambiente do Docker em .env.docker.example e documentar em .env.example
+- [x] T003 [P] Criar metro.config.js com blockList para impedir que o bundler do Expo indexe a pasta api/
+- [x] T004 [P] Inicializar projeto NestJS 11 em api/package.json com TypeScript strict e scripts de build/dev
+- [x] T005 [P] Configurar regras do agente e padrões de desenvolvimento em api/AGENTS.md
+- [x] T006 [P] Configurar tsconfig.json e nest-cli.json em api/
+- [x] T007 [P] Criar Dockerfile multi-stage com usuário não-root (node) e .dockerignore em api/Dockerfile
+- [x] T008 Instalar dependências da API (NestJS, Prisma, Argon2, class-validator, helmet, etc.) em api/package.json
 
 ---
 
@@ -26,15 +26,15 @@
 
 **⚠️ CRITICAL**: Nenhuma história de usuário que dependa do servidor pode ser iniciada antes da conclusão desta fase.
 
-- [ ] T009 Configurar schema do Prisma com tabelas users, sessions, saved_verses, user_preferences, password_reset_codes e extensão citext em api/prisma/schema.prisma
-- [ ] T010 Criar serviço e módulo de conexão PrismaService em api/src/prisma/prisma.service.ts e api/src/prisma/prisma.module.ts
-- [ ] T011 [P] Implementar validação de variáveis de ambiente com Joi/Zod em api/src/config/env.validation.ts
-- [ ] T012 [P] Implementar filtro global de exceções HttpExceptionFilter para padronizar respostas `{ error: { code, message, details } }` em api/src/common/filters/http-exception.filter.ts
-- [ ] T013 [P] Implementar interceptor global TransformInterceptor para padronizar respostas `{ data: T }` em api/src/common/interceptors/transform.interceptor.ts
-- [ ] T014 [P] Implementar decorators @Public() e @CurrentUser() em api/src/common/decorators/
-- [ ] T015 [P] Implementar JwtAuthGuard global com estratégia default-deny em api/src/common/guards/jwt-auth.guard.ts
-- [ ] T016 Configurar bootstrap global (Helmet, CORS, ValidationPipe com whitelist/transform, prefixo /api/v1) em api/src/main.ts
-- [ ] T017 [P] Implementar endpoint de health check público em api/src/health/health.controller.ts
+- [x] T009 Configurar schema do Prisma com tabelas users, sessions, saved_verses, user_preferences, password_reset_codes e extensão citext em api/prisma/schema.prisma
+- [x] T010 Criar serviço e módulo de conexão PrismaService em api/src/prisma/prisma.service.ts e api/src/prisma/prisma.module.ts
+- [x] T011 [P] Implementar validação de variáveis de ambiente com Joi/Zod em api/src/config/env.validation.ts
+- [x] T012 [P] Implementar filtro global de exceções HttpExceptionFilter para padronizar respostas `{ error: { code, message, details } }` em api/src/common/filters/http-exception.filter.ts
+- [x] T013 [P] Implementar interceptor global TransformInterceptor para padronizar respostas `{ data: T }` em api/src/common/interceptors/transform.interceptor.ts
+- [x] T014 [P] Implementar decorators @Public() e @CurrentUser() em api/src/common/decorators/
+- [x] T015 [P] Implementar JwtAuthGuard global com estratégia default-deny em api/src/common/guards/jwt-auth.guard.ts
+- [x] T016 Configurar bootstrap global (Helmet, CORS, ValidationPipe com whitelist/transform, prefixo /api/v1) em api/src/main.ts
+- [x] T017 [P] Implementar endpoint de health check público em api/src/health/health.controller.ts
 
 **Checkpoint**: Infraestrutura de banco e API pronta e testável via `GET /api/v1/health`.
 
@@ -68,27 +68,27 @@
 **Independent Test**: Criar nova conta pelo app → verificar sessão ativa e saudação personalizada → fechar e reabrir app → continuar logado sem pedir senha → efetuar logout e voltar ao modo visitante (Cenários V2, V5 e V6).
 
 ### Backend (Auth & Sessions)
-- [ ] T028 [P] [US1] Implementar serviço de hash e verificação Argon2id em api/src/auth/password.service.ts
-- [ ] T029 [P] [US1] Criar DTOs de cadastro e login (RegisterDto, LoginDto) com validações em api/src/auth/dto/
-- [ ] T030 [US2] Implementar SessionsService com geração de refresh token opaco, hash SHA-256 e rotação com detecção de reuso em api/src/auth/sessions.service.ts
-- [ ] T031 [US1] Implementar AuthService (registro atômico com usuário, preferências padrão e sessão) em api/src/auth/auth.service.ts
-- [ ] T032 [US2] Implementar bloqueio por força bruta (5 falhas / 15 min) e mitigação contra enumeração de usuários em api/src/auth/auth.service.ts
-- [ ] T033 [US2] Implementar endpoints POST /auth/register, POST /auth/login, POST /auth/refresh e POST /auth/logout em api/src/auth/auth.controller.ts
-- [ ] T034 [P] [US2] Configurar ThrottlerModule com rate limit estrito nas rotas de autenticação em api/src/app.module.ts
+- [x] T028 [P] [US1] Implementar serviço de hash e verificação Argon2id em api/src/auth/password.service.ts
+- [x] T029 [P] [US1] Criar DTOs de cadastro e login (RegisterDto, LoginDto) com validações em api/src/auth/dto/
+- [x] T030 [US2] Implementar SessionsService com geração de refresh token opaco, hash SHA-256 e rotação com detecção de reuso em api/src/auth/sessions.service.ts
+- [x] T031 [US1] Implementar AuthService (registro atômico com usuário, preferências padrão e sessão) em api/src/auth/auth.service.ts
+- [x] T032 [US2] Implementar bloqueio por força bruta (5 falhas / 15 min) e mitigação contra enumeração de usuários em api/src/auth/auth.service.ts
+- [x] T033 [US2] Implementar endpoints POST /auth/register, POST /auth/login, POST /auth/refresh e POST /auth/logout em api/src/auth/auth.controller.ts
+- [x] T034 [P] [US2] Configurar ThrottlerModule com rate limit estrito nas rotas de autenticação em api/src/app.module.ts
 
 ### App (Cliente, Armazenamento Seguro e Telas)
-- [ ] T035 [P] [US2] Instalar expo-secure-store e expo-crypto no app em package.json
-- [ ] T036 [P] [US2] Implementar secureTokenStorage para salvar e recuperar refresh token criptografado em src/services/storage/secureTokenStorage.ts
-- [ ] T037 [US2] Implementar apiClient com interceptor de Bearer token e refresh automático single-flight em src/services/api/apiClient.ts
-- [ ] T038 [P] [US1] Implementar cliente de API authApi com register, login, refresh e logout em src/services/api/authApi.ts
-- [ ] T039 [US2] Criar useSessionStore com Zustand para gerenciar status (booting, guest, authenticated), user e access token em memória em src/stores/useSessionStore.ts
-- [ ] T040 [US2] Criar hook useSessionBootstrap para inicializar sessão na inicialização do app em src/hooks/useSessionBootstrap.ts
-- [ ] T041 [P] [US1] Criar componente visual PasswordField com alternador de visibilidade nos tokens pasteis em src/components/ui/PasswordField.tsx
-- [ ] T042 [P] [US1] Criar componente FormError para exibição de mensagens de validação em src/components/ui/FormError.tsx
-- [ ] T043 [US1] Implementar tela SignUpScreen com validação de senha em tempo real e aviso de não-migração de favoritos em src/screens/auth/SignUpScreen.tsx
-- [ ] T044 [US2] Implementar tela SignInScreen com tratamento de bloqueio temporário e navegação para recuperação em src/screens/auth/SignInScreen.tsx
-- [ ] T045 [US2] Atualizar RootNavigator e navegação tipada adicionando rotas modais de SignIn e SignUp em src/navigation/
-- [ ] T046 [US2] Atualizar SideDrawer para exibir botão 'Entrar / Criar conta' (visitante) ou nome/avatar com botão de logout em src/components/ui/SideDrawer.tsx
+- [x] T035 [P] [US2] Instalar expo-secure-store e expo-crypto no app em package.json
+- [x] T036 [P] [US2] Implementar secureTokenStorage para salvar e recuperar refresh token criptografado em src/services/storage/secureTokenStorage.ts
+- [x] T037 [US2] Implementar apiClient com interceptor de Bearer token e refresh automático single-flight em src/services/api/apiClient.ts
+- [x] T038 [P] [US1] Implementar cliente de API authApi com register, login, refresh e logout em src/services/api/authApi.ts
+- [x] T039 [US2] Criar useSessionStore com Zustand para gerenciar status (booting, guest, authenticated), user e access token em memória em src/stores/useSessionStore.ts
+- [x] T040 [US2] Criar hook useSessionBootstrap para inicializar sessão na inicialização do app em src/hooks/useSessionBootstrap.ts
+- [x] T041 [P] [US1] Criar componente visual PasswordField com alternador de visibilidade nos tokens pasteis em src/components/ui/PasswordField.tsx
+- [x] T042 [P] [US1] Criar componente FormError para exibição de mensagens de validação em src/components/ui/FormError.tsx
+- [x] T043 [US1] Implementar tela SignUpScreen com validação de senha em tempo real e aviso de não-migração de favoritos em src/screens/auth/SignUpScreen.tsx
+- [x] T044 [US2] Implementar tela SignInScreen com tratamento de bloqueio temporário e navegação para recuperação em src/screens/auth/SignInScreen.tsx
+- [x] T045 [US2] Atualizar RootNavigator e navegação tipada adicionando rotas modais de SignIn e SignUp em src/navigation/
+- [x] T046 [US2] Atualizar SideDrawer para exibir botão 'Entrar / Criar conta' (visitante) ou nome/avatar com botão de logout em src/components/ui/SideDrawer.tsx
 
 **Checkpoint**: Cadastro, login, logout e permanência de sessão 100% funcionais de ponta a ponta.
 

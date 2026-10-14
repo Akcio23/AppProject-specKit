@@ -1,0 +1,87 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  name              String
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  photoKey          String?   @map("photo_key")
+  failedLoginCount  Int       @default(0) @map("failed_login_count")
+  lockedUntil       DateTime? @map("locked_until")
+  passwordChangedAt DateTime  @default(now()) @map("password_changed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  sessions          Session[]
+  savedVerses       SavedVerse[]
+  preference        UserPreference?
+  resetCodes        PasswordResetCode[]
+
+  @@map("users")
+}
+
+model Session {
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  refreshTokenHash   String    @unique @map("refresh_token_hash")
+  previousTokenHash  String?   @map("previous_token_hash")
+  deviceName         String?   @map("device_name")
+  lastUsedAt         DateTime  @default(now()) @map("last_used_at")
+  revokedAt          DateTime? @map("revoked_at")
+  revokedReason      String?   @map("revoked_reason")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model SavedVerse {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  reference   String
+  text        String
+  translation String
+  savedAt     DateTime @map("saved_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reference, translation], name: "user_reference_translation_unique")
+  @@index([userId, savedAt(sort: Desc)])
+  @@map("saved_verses")
+}
+
+model UserPreference {
+  userId        String   @id @map("user_id") @db.Uuid
+  theme         String   @default("dark")
+  translationId String   @default("almeida") @map("translation_id")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model PasswordResetCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHmac  String    @map("code_hmac")
+  attempts  Int       @default(0)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("password_reset_codes")
+}
