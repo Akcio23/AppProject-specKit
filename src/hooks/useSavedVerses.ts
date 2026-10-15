@@ -1,37 +1,58 @@
 import { useCallback } from 'react';
+import { useSessionStore } from '@/stores/useSessionStore';
 import { useGuestStore } from '@/stores/useGuestStore';
+import { useAccountCacheStore } from '@/stores/useAccountCacheStore';
 import { NewSavedVerse, SavedVerse } from '@/types';
 
 /**
  * Hook de fachada para gerenciamento de versículos salvos (favoritos).
- * No MVP 1 (modo visitante), lê e persiste os dados localmente no aparelho.
- * Nas fases seguintes, alternará dinamicamente entre visitante e conta sincronizada.
+ * Alterna dinamicamente entre visitante (useGuestStore) e conta sincronizada (useAccountCacheStore)
+ * garantindo isolamento total dos dados conforme SPEC 005.
  */
 export function useSavedVerses() {
-  const savedVerses = useGuestStore((s) => s.savedVerses);
-  const saveVerseAction = useGuestStore((s) => s.saveVerse);
-  const removeSavedVerseAction = useGuestStore((s) => s.removeSavedVerse);
-  const isVerseSavedAction = useGuestStore((s) => s.isVerseSaved);
+  const isAuthenticated = useSessionStore((s) => s.status === 'authenticated');
+
+  const guestVerses = useGuestStore((s) => s.savedVerses);
+  const guestSaveVerse = useGuestStore((s) => s.saveVerse);
+  const guestRemoveVerse = useGuestStore((s) => s.removeSavedVerse);
+  const guestIsVerseSaved = useGuestStore((s) => s.isVerseSaved);
+
+  const accountVerses = useAccountCacheStore((s) => s.savedVerses);
+  const accountSaveVerse = useAccountCacheStore((s) => s.saveVerse);
+  const accountRemoveVerse = useAccountCacheStore((s) => s.removeSavedVerse);
+  const accountIsVerseSaved = useAccountCacheStore((s) => s.isVerseSaved);
+
+  const savedVerses = isAuthenticated ? accountVerses : guestVerses;
 
   const saveVerse = useCallback(
     (verse: NewSavedVerse): SavedVerse => {
-      return saveVerseAction(verse);
+      if (isAuthenticated) {
+        return accountSaveVerse(verse);
+      }
+      return guestSaveVerse(verse);
     },
-    [saveVerseAction],
+    [isAuthenticated, accountSaveVerse, guestSaveVerse],
   );
 
   const removeSavedVerse = useCallback(
     (idOrReference: string) => {
-      removeSavedVerseAction(idOrReference);
+      if (isAuthenticated) {
+        accountRemoveVerse(idOrReference);
+      } else {
+        guestRemoveVerse(idOrReference);
+      }
     },
-    [removeSavedVerseAction],
+    [isAuthenticated, accountRemoveVerse, guestRemoveVerse],
   );
 
   const isVerseSaved = useCallback(
     (reference: string, translation?: string) => {
-      return isVerseSavedAction(reference, translation);
+      if (isAuthenticated) {
+        return accountIsVerseSaved(reference, translation);
+      }
+      return guestIsVerseSaved(reference, translation);
     },
-    [isVerseSavedAction],
+    [isAuthenticated, accountIsVerseSaved, guestIsVerseSaved],
   );
 
   return {
@@ -39,6 +60,5 @@ export function useSavedVerses() {
     saveVerse,
     removeSavedVerse,
     isVerseSaved,
-    savedCount: savedVerses.length,
   };
 }

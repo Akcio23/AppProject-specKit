@@ -147,3 +147,7 @@ export async function apiRequest<T>(
     clearTimeout(timeoutId);
   }
 }
+
+export const apiClient = {
+  request: apiRequest,
+};

@@ -101,17 +101,17 @@
 **Independent Test**: Salvar versículos e alterar tema em um aparelho → logar em outro aparelho → dados aparecem sincronizados; salvar em modo avião → reconectar → dados sobem para a API em até 30s (Cenários V4 e V8).
 
 ### Backend (Endpoints de Usuário)
-- [ ] T047 [P] [US3] Implementar PreferencesService e PreferencesController para GET /me/preferences e PUT /me/preferences em api/src/preferences/
-- [ ] T048 [P] [US3] Implementar SavedVersesService e SavedVersesController com PUT idempotente por UUID e DELETE em api/src/saved-verses/
-- [ ] T049 [US3] Garantir isolamento multitenant estrito (@CurrentUser('id')) contra IDOR e resposta sem duplicação de versículos em api/src/saved-verses/
+- [x] T047 [P] [US3] Implementar PreferencesService e PreferencesController para GET /me/preferences e PUT /me/preferences em api/src/preferences/
+- [x] T048 [P] [US3] Implementar SavedVersesService e SavedVersesController com PUT idempotente por UUID e DELETE em api/src/saved-verses/
+- [x] T049 [US3] Garantir isolamento multitenant estrito (@CurrentUser('id')) contra IDOR e resposta sem duplicação de versículos em api/src/saved-verses/
 
 ### App (Cache, Outbox e Integração)
-- [ ] T050 [P] [US3] Instalar @react-native-community/netinfo no app em package.json
-- [ ] T051 [P] [US3] Implementar accountApi com endpoints de preferências e versículos em src/services/api/accountApi.ts
-- [ ] T052 [US3] Criar useAccountCacheStore com cache isolado por userId e fila outbox persistida em src/stores/useAccountCacheStore.ts
-- [ ] T053 [US3] Atualizar hooks de fachada useSavedVerses e usePreferences para alternar entre useGuestStore e useAccountCacheStore conforme useSessionStore em src/hooks/
-- [ ] T054 [US3] Implementar hook useOutboxSync para processamento e reenvio automático da fila offline ao reconectar em src/hooks/useOutboxSync.ts
-- [ ] T055 [US3] Integrar useOutboxSync e bootstrap na raiz do app em App.tsx
+- [x] T050 [P] [US3] Instalar @react-native-community/netinfo no app em package.json
+- [x] T051 [P] [US3] Implementar accountApi com endpoints de preferências e versículos em src/services/api/accountApi.ts
+- [x] T052 [US3] Criar useAccountCacheStore com cache isolado por userId e fila outbox persistida em src/stores/useAccountCacheStore.ts
+- [x] T053 [US3] Atualizar hooks de fachada useSavedVerses e usePreferences para alternar entre useGuestStore e useAccountCacheStore conforme useSessionStore em src/hooks/
+- [x] T054 [US3] Implementar hook useOutboxSync para processamento e reenvio automático da fila offline ao reconectar em src/hooks/useOutboxSync.ts
+- [x] T055 [US3] Integrar useOutboxSync e bootstrap na raiz do app em App.tsx
 
 **Checkpoint**: Sincronização de dados da conta e suporte offline concluídos com sucesso.
 

@@ -5,9 +5,11 @@ import { queryClient } from '@/lib/queryClient';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { usePreferences } from '@/hooks/usePreferences';
 import { useSessionBootstrap } from '@/hooks/useSessionBootstrap';
+import { useOutboxSync } from '@/hooks/useOutboxSync';
 
 function AppContent() {
   useSessionBootstrap();
+  useOutboxSync();
   const { isDarkMode } = usePreferences();
 
   return (
