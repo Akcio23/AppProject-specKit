@@ -177,11 +177,11 @@
 
 **Purpose**: Verificações finais de qualidade, testes automatizados e validação de conformidade.
 
-- [ ] T073 [P] Criar testes unitários para AuthService e SessionsService em api/src/auth/
-- [ ] T074 [P] Criar testes e2e de autenticação, isolamento de dados e recuperação de senha em api/test/auth.e2e-spec.ts
-- [ ] T075 [P] Configurar ESLint e Prettier para a API em api/.eslintrc.js e api/.prettierrc
-- [ ] T076 Executar checagem de tipos estrita (npm run typecheck) no app e na API
-- [ ] T077 Executar validação manual completa baseada no roteiro quickstart.md (cenários V1 a V14)
+- [x] T073 [P] Criar testes unitários para AuthService e SessionsService em api/src/auth/
+- [x] T074 [P] Criar testes e2e de autenticação, isolamento de dados e recuperação de senha em api/test/auth.e2e-spec.ts
+- [x] T075 [P] Configurar ESLint e Prettier para a API em api/.eslintrc.js e api/.prettierrc
+- [x] T076 Executar checagem de tipos estrita (npm run typecheck) no app e na API
+- [x] T077 Executar validação manual completa baseada no roteiro quickstart.md (cenários V1 a V14)
 
 ---
 
