@@ -15,6 +15,7 @@ import { memoryStorage } from 'multer';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 
 @Controller('me')
 export class UsersController {
@@ -83,5 +84,13 @@ export class UsersController {
   @Delete('photo')
   async deletePhoto(@CurrentUser('id') userId: string) {
     return this.usersService.deletePhoto(userId);
+  }
+
+  @Delete()
+  async deleteAccount(
+    @CurrentUser('id') userId: string,
+    @Body() dto: DeleteAccountDto,
+  ) {
+    return this.usersService.deleteAccount(userId, dto);
   }
 }

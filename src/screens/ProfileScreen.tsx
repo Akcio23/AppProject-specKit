@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -14,18 +15,25 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/hooks/useTheme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { Avatar, TextField, FormError } from '@/components/ui';
+import { Avatar, TextField, FormError, PasswordField } from '@/components/ui';
 import { RootStackScreenProps } from '@/navigation/types';
 import { spacing, typography, borderRadius, shadows, pastelPalette } from '@/constants/theme';
 
 export const ProfileScreen = memo(({ navigation }: RootStackScreenProps<'Profile'>) => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { user, isLoading, error, updateName, uploadPhoto, deletePhoto } = useCurrentUser();
+  const { user, isLoading, error, updateName, uploadPhoto, deletePhoto, deleteAccount } =
+    useCurrentUser();
   const signOut = useSessionStore((s) => s.signOut);
 
   const [name, setName] = useState<string>(user?.name ?? '');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Estados da exclusão de conta (LGPD)
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isNameChanged = useMemo(() => {
     return name.trim() !== (user?.name ?? '').trim() && name.trim().length >= 2;
@@ -132,6 +140,54 @@ export const ProfileScreen = memo(({ navigation }: RootStackScreenProps<'Profile
       },
     ]);
   }, [navigation, signOut]);
+
+  const handleOpenDeleteModal = useCallback(() => {
+    setDeletePassword('');
+    setDeleteError(null);
+    setIsDeleteModalVisible(true);
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      // Fallback
+    }
+  }, []);
+
+  const handleCloseDeleteModal = useCallback(() => {
+    setIsDeleteModalVisible(false);
+    setDeletePassword('');
+    setDeleteError(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deletePassword.trim() || isDeleting) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const ok = await deleteAccount(deletePassword);
+      if (ok) {
+        setIsDeleteModalVisible(false);
+        navigation.goBack();
+        try {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch {
+          // Fallback
+        }
+      } else {
+        setDeleteError('Senha incorreta. Não foi possível excluir sua conta.');
+        try {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        } catch {
+          // Fallback
+        }
+      }
+    } catch {
+      setDeleteError('Erro ao excluir conta. Verifique sua conexão.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteAccount, deletePassword, isDeleting, navigation]);
 
   const memberSince = useMemo(() => {
     if (!user?.createdAt) return '';
@@ -280,7 +336,100 @@ export const ProfileScreen = memo(({ navigation }: RootStackScreenProps<'Profile
         >
           <Text style={[styles.logoutCardText, { color: pastelPalette.errorPastel }]}>Sair da Conta 🚪</Text>
         </Pressable>
+
+        {/* Zona de Privacidade & Exclusão de Conta (LGPD) */}
+        <View style={[styles.card, styles.dangerCard, { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle }]}>
+          <Text style={[styles.sectionTitle, { color: pastelPalette.errorPastel }]}>PRIVACIDADE & LGPD</Text>
+          <Text style={[styles.dangerDesc, { color: theme.textSecondary }]}>
+            Conforme a Lei Geral de Proteção de Dados (LGPD), você pode solicitar a exclusão definitiva
+            de sua conta e de todos os seus dados pessoais (foto, preferências e versículos sincronizados).
+          </Text>
+
+          <Pressable
+            onPress={handleOpenDeleteModal}
+            style={({ pressed }) => [
+              styles.deleteAccountBtn,
+              { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+              pressed && { opacity: 0.7 },
+            ]}
+            accessibilityLabel="Excluir minha conta permanentemente"
+          >
+            <Text style={[styles.deleteAccountBtnText, { color: pastelPalette.errorPastel }]}>
+              Excluir Minha Conta Permanentemente ⚠️
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
+
+      {/* Modal de Confirmação com Senha para Exclusão de Conta */}
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseDeleteModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              shadows.soft,
+              { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>
+              Excluir Conta Definitivamente?
+            </Text>
+            <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
+              Esta ação é <Text style={{ fontWeight: 'bold' }}>irreversível</Text>. Todos os seus
+              versículos salvos na nuvem, foto e dados da conta serão apagados imediatamente.
+            </Text>
+
+            <FormError message={deleteError} />
+
+            <View style={{ marginVertical: spacing.md }}>
+              <PasswordField
+                label="CONFIRME SUA SENHA ATUAL"
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+                placeholder="Sua senha secreta"
+                onSubmitEditing={handleConfirmDelete}
+                testID="delete-account-password-input"
+              />
+            </View>
+
+            <View style={styles.modalActionsRow}>
+              <Pressable
+                onPress={handleCloseDeleteModal}
+                disabled={isDeleting}
+                style={({ pressed }) => [
+                  styles.modalCancelBtn,
+                  { backgroundColor: theme.surfaceSubtle },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Text style={[styles.modalCancelText, { color: theme.textPrimary }]}>Cancelar</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleConfirmDelete}
+                disabled={!deletePassword.trim() || isDeleting}
+                style={({ pressed }) => [
+                  styles.modalConfirmBtn,
+                  { backgroundColor: pastelPalette.errorPastel },
+                  (!deletePassword.trim() || isDeleting) && { opacity: 0.5 },
+                  pressed && { opacity: 0.8 },
+                ]}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalConfirmText}>Sim, Excluir</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 });
@@ -403,6 +552,81 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   logoutCardText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.bold,
+  },
+  dangerCard: {
+    marginTop: spacing.xs,
+    borderLeftWidth: 4,
+    borderLeftColor: pastelPalette.errorPastel,
+  },
+  dangerDesc: {
+    fontSize: typography.fontSize.xs,
+    lineHeight: 18,
+    marginVertical: spacing.xs,
+  },
+  deleteAccountBtn: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xs,
+  },
+  deleteAccountBtnText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.xl,
+  },
+  modalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    fontSize: typography.fontSize.xs,
+    lineHeight: 18,
+    marginBottom: spacing.sm,
+  },
+  modalActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  modalCancelBtn: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  modalCancelText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  modalConfirmBtn: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalConfirmText: {
+    color: '#FFFFFF',
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },

@@ -56,6 +56,13 @@ export const usersApi = {
     return normalizeUser(user);
   },
 
+  async deleteAccount(password: string): Promise<void> {
+    await apiClient.request<void>('/me', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
+  },
+
   normalizeUser(user: User): User {
     return normalizeUser(user);
   },

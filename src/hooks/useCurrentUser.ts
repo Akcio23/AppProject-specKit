@@ -71,6 +71,21 @@ export function useCurrentUser() {
     }
   }, [setUser]);
 
+  const deleteAccount = useCallback(async (password: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await usersApi.deleteAccount(password);
+      await useSessionStore.getState().signOut('Sua conta foi excluída com sucesso.');
+      return true;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Falha ao excluir conta.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     user,
     isLoading,
@@ -79,5 +94,6 @@ export function useCurrentUser() {
     uploadPhoto,
     deletePhoto,
     refreshProfile,
+    deleteAccount,
   };
 }

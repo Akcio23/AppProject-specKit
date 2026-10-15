@@ -1,14 +1,22 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import sharp from 'sharp';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { PasswordService } from '../auth/password.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly passwordService: PasswordService,
   ) {}
 
   private formatUser(user: {
@@ -124,5 +132,47 @@ export class UsersService {
     }
 
     return this.formatUser(updatedUser);
+  }
+
+  /**
+   * Exclusão definitiva de conta do usuário e de todos os seus dados pessoais (LGPD).
+   * Exige a confirmação da senha atual.
+   */
+  async deleteAccount(userId: string, dto: DeleteAccountDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        passwordHash: true,
+        photoKey: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    const isPasswordValid = await this.passwordService.verify(
+      user.passwordHash,
+      dto.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Senha incorreta. Não foi possível excluir a conta.');
+    }
+
+    // 1. Remove foto física do disco, se houver
+    if (user.photoKey) {
+      await this.storageService.deleteAvatar(user.photoKey);
+    }
+
+    // 2. Apaga usuário e todas as tabelas relacionadas em cascata (Prisma onDelete: Cascade)
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return {
+      message: 'Sua conta e todos os seus dados foram excluídos permanentemente.',
+    };
   }
 }

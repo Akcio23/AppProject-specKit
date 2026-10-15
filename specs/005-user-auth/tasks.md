@@ -166,8 +166,8 @@
 
 **Independent Test**: Abrir perfil → solicitar exclusão de conta → confirmar com senha → conta apagada do banco, foto removida do disco e app retorna ao modo visitante (Cenário V14).
 
-- [ ] T071 [US6] Implementar endpoint DELETE /me com verificação de senha e deleção em cascata no Prisma e remoção do arquivo de foto em api/src/users/users.service.ts
-- [ ] T072 [US6] Adicionar modal de confirmação com inserção de senha e fluxo de exclusão em src/screens/ProfileScreen.tsx
+- [x] T071 [US6] Implementar endpoint DELETE /me com verificação de senha e deleção em cascata no Prisma e remoção do arquivo de foto em api/src/users/users.service.ts
+- [x] T072 [US6] Adicionar modal de confirmação com inserção de senha e fluxo de exclusão em src/screens/ProfileScreen.tsx
 
 **Checkpoint**: Conformidade total com a LGPD e encerramento limpo da conta.
 
