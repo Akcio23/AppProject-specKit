@@ -1,8 +1,23 @@
 import { NativeModules, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { ApiErrorResponse } from '@/types/auth';
 
 const getBundleHost = (): string | null => {
   try {
+    // 1. Tenta extrair pelo host do Expo Config (Expo Go)
+    const hostUri =
+      Constants.expoConfig?.hostUri ??
+      ((Constants.expoConfig as unknown as Record<string, unknown>)?.debuggerHost as string | undefined) ??
+      ((Constants as unknown as Record<string, unknown>)?.experienceUrl as string | undefined);
+
+    if (hostUri) {
+      const match = hostUri.match(/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+    // 2. Tenta extrair pelo scriptURL do Metro
     const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
     if (scriptURL) {
       const match = scriptURL.match(/https?:\/\/([^:/]+)/);
@@ -17,7 +32,7 @@ const getBundleHost = (): string | null => {
 };
 
 export const getApiBaseUrl = (): string => {
-  // Em modo de desenvolvimento, detecta o IP real da máquina a partir do script do Metro
+  // 1. Em desenvolvimento, prioriza o IP real onde o Expo/Metro está rodando
   if (__DEV__) {
     const bundleHost = getBundleHost();
     if (bundleHost && bundleHost !== 'localhost' && bundleHost !== '127.0.0.1') {
@@ -25,15 +40,21 @@ export const getApiBaseUrl = (): string => {
     }
   }
 
+  // 2. Se houver EXPO_PUBLIC_API_URL embutido, saneia se tiver o IP antigo em cache
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) {
-    if (Platform.OS === 'android' && envUrl.includes('localhost')) {
-      return envUrl.replace('localhost', '10.0.2.2');
+    let sanitized = envUrl;
+    if (sanitized.includes('192.168.0.13')) {
+      sanitized = sanitized.replace('192.168.0.13', '192.168.0.2');
     }
-    return envUrl;
+    if (Platform.OS === 'android' && sanitized.includes('localhost')) {
+      return sanitized.replace('localhost', '10.0.2.2');
+    }
+    return sanitized;
   }
-  const defaultHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-  return `http://${defaultHost}:3000/api/v1`;
+
+  // 3. Fallback para o IP atual da máquina na rede local
+  return 'http://192.168.0.2:3000/api/v1';
 };
 
 export const API_BASE_URL: string = getApiBaseUrl();
