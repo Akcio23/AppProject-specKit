@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useCallback } from 'react';
+import { memo, useEffect, useRef, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,23 +8,28 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { spacing, borderRadius, typography, shadows } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { Avatar } from './Avatar';
+import { ThemePillSwitch } from './ThemePillSwitch';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = Math.min(310, Math.floor(SCREEN_WIDTH * 0.82));
+const EXPANDED_DRAWER_WIDTH = Math.min(300, Math.floor(SCREEN_WIDTH * 0.82));
+const COLLAPSED_DRAWER_WIDTH = 76;
+
+export type SidebarVariant = 'expanded' | 'collapsed';
 
 export interface DrawerMenuItem {
   id: string;
   label: string;
-  icon: string;
+  iconName: keyof typeof Feather.glyphMap;
   badgeCount?: number;
 }
 
-interface SideDrawerProps {
+export interface SideDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   activeId: string;
@@ -34,6 +39,8 @@ interface SideDrawerProps {
   onPressSignUp?: () => void;
   onPressProfile?: () => void;
   savedCount?: number;
+  variant?: SidebarVariant;
+  onToggleVariant?: () => void;
 }
 
 export const SideDrawer = memo(({
@@ -46,11 +53,20 @@ export const SideDrawer = memo(({
   onPressSignUp,
   onPressProfile,
   savedCount = 0,
+  variant: propVariant,
+  onToggleVariant,
 }: SideDrawerProps) => {
   const insets = useSafeAreaInsets();
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { status, user, signOut } = useSessionStore();
-  const translateX = useRef(new Animated.Value(-DRAWER_WIDTH - 20)).current;
+
+  const [internalVariant, setInternalVariant] = useState<SidebarVariant>('expanded');
+  const activeVariant = propVariant || internalVariant;
+  const isCollapsed = activeVariant === 'collapsed';
+
+  const currentWidth = isCollapsed ? COLLAPSED_DRAWER_WIDTH : EXPANDED_DRAWER_WIDTH;
+
+  const translateX = useRef(new Animated.Value(-EXPANDED_DRAWER_WIDTH - 20)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -77,7 +93,7 @@ export const SideDrawer = memo(({
     } else {
       Animated.parallel([
         Animated.timing(translateX, {
-          toValue: -DRAWER_WIDTH - 20,
+          toValue: -EXPANDED_DRAWER_WIDTH - 20,
           duration: 200,
           useNativeDriver: true,
         }),
@@ -122,17 +138,32 @@ export const SideDrawer = memo(({
     onOpenSearch();
   }, [onClose, onOpenSearch]);
 
+  const handleToggleVariantInternal = useCallback(() => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      // Fallback
+    }
+    if (onToggleVariant) {
+      onToggleVariant();
+    } else {
+      setInternalVariant((prev) => (prev === 'expanded' ? 'collapsed' : 'expanded'));
+    }
+  }, [onToggleVariant]);
+
+  // Itens de navegação sem o Dashboard, com ícones renovados (book-open, compass, bookmark)
   const menuItems: DrawerMenuItem[] = [
-    { id: 'devocional', label: 'Devocional Diário', icon: '🕊️' },
-    { id: 'temas', label: 'Temas & Meditações', icon: '✨' },
+    { id: 'devocional', label: 'Devocional Diário', iconName: 'book-open' },
+    { id: 'temas', label: 'Temas & Meditações', iconName: 'compass' },
     {
       id: 'guardados',
       label: 'Versículos Guardados',
-      icon: '❤️',
+      iconName: 'bookmark',
       badgeCount: savedCount > 0 ? savedCount : undefined,
     },
-    { id: 'ajustes', label: 'Ajustes & Traduções', icon: '⚙️' },
   ];
+
+  const isAuthenticated = status === 'authenticated' && !!user;
 
   return (
     <View
@@ -156,13 +187,13 @@ export const SideDrawer = memo(({
         />
       </Animated.View>
 
-      {/* Painel da Navbar lateral clean pastel */}
+      {/* Painel da Sidebar com estrutura Duck UI e paleta Clean Pastel */}
       <Animated.View
         style={[
           styles.drawerContainer,
           shadows.modal,
           {
-            width: DRAWER_WIDTH,
+            width: currentWidth,
             paddingTop: insets.top + spacing.md,
             paddingBottom: insets.bottom + spacing.md,
             transform: [{ translateX }],
@@ -171,128 +202,62 @@ export const SideDrawer = memo(({
           },
         ]}
       >
-        <View style={styles.drawerInner}>
-          {/* Header da Navbar Lateral */}
-          <View style={styles.drawerHeader}>
-            <View style={styles.brandRow}>
-              <View
-                style={[
-                  styles.brandBadge,
-                  { backgroundColor: theme.accentSoft, borderColor: theme.accent },
-                ]}
-              >
-                <Text style={[styles.brandBadgeIcon, { color: theme.accentText }]}>✝</Text>
-              </View>
-              <View>
-                <Text style={[styles.brandTitle, { color: theme.textPrimary }]}>
-                  Bíblia Sagrada
-                </Text>
-                <Text style={[styles.brandSubtitle, { color: theme.textSecondary }]}>
-                  Palavra Viva de Paz
-                </Text>
-              </View>
-            </View>
-
+        <View style={[styles.drawerInner, isCollapsed && styles.drawerInnerCollapsed]}>
+          {/* Header da Sidebar (Exibindo apenas Nome e Foto, sem e-mail) */}
+          <View style={[styles.headerRow, isCollapsed && styles.headerRowCollapsed]}>
             <Pressable
-              onPress={handleClose}
+              onPress={isAuthenticated ? () => { handleClose(); onPressProfile?.(); } : handleToggleVariantInternal}
               style={({ pressed }) => [
-                styles.closeBtn,
-                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
-                pressed && styles.closeBtnPressed,
-              ]}
-              accessibilityLabel="Recolher navbar"
-            >
-              <Text style={[styles.closeBtnText, { color: theme.textSecondary }]}>✕</Text>
-            </Pressable>
-          </View>
-
-          {/* Card de Perfil / Autenticação (SPEC 005) */}
-          {status === 'authenticated' && user ? (
-            <Pressable
-              onPress={() => {
-                handleClose();
-                onPressProfile?.();
-              }}
-              style={({ pressed }) => [
-                styles.accountCard,
-                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                styles.brandLogoBox,
                 pressed && { opacity: 0.8 },
               ]}
-              accessibilityLabel="Abrir perfil da conta"
+              accessibilityLabel="Perfil ou alternar modo do menu"
             >
-              <View style={styles.accountInfoRow}>
+              {isAuthenticated && user ? (
                 <Avatar name={user.name} photoUrl={user.photoUrl} size="md" />
-                <View style={styles.accountTextWrapper}>
-                  <Text style={[styles.accountName, { color: theme.textPrimary }]} numberOfLines={1}>
-                    {user.name}
-                  </Text>
-                  <Text style={[styles.accountEmail, { color: theme.textMuted }]} numberOfLines={1}>
-                    {user.email}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.accountCardFooter}>
-                <Text style={[styles.editProfileText, { color: theme.accent }]}>
-                  Editar perfil ✏️
-                </Text>
-                <Pressable
-                  onPress={() => void signOut()}
-                  style={({ pressed }) => [
-                    styles.logoutBtn,
-                    pressed && { opacity: 0.7 },
+              ) : (
+                <View
+                  style={[
+                    styles.logoBadge,
+                    { backgroundColor: theme.accentSoft, borderColor: theme.accent },
                   ]}
-                  accessibilityLabel="Sair da conta"
                 >
-                  <Text style={[styles.logoutBtnText, { color: theme.textSecondary }]}>
-                    Sair →
-                  </Text>
-                </Pressable>
-              </View>
+                  <Text style={[styles.logoIconText, { color: theme.accentText }]}>✝</Text>
+                </View>
+              )}
             </Pressable>
-          ) : (
-            <View
-              style={[
-                styles.accountCard,
-                { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
-              ]}
-            >
-              <Text style={[styles.guestTitle, { color: theme.textPrimary }]}>
-                Sua Conta Pessoal 👤
-              </Text>
-              <Text style={[styles.guestSubtitle, { color: theme.textMuted }]}>
-                Acesse para guardar seus versículos na nuvem.
-              </Text>
-              <View style={styles.authBtnRow}>
-                <Pressable
-                  onPress={() => {
-                    handleClose();
-                    onPressSignIn?.();
-                  }}
-                  style={[styles.authActionBtn, { backgroundColor: theme.surfaceCard, borderColor: theme.borderSubtle }]}
-                >
-                  <Text style={[styles.authActionText, { color: theme.textPrimary }]}>Entrar</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    handleClose();
-                    onPressSignUp?.();
-                  }}
-                  style={[styles.authActionBtn, { backgroundColor: theme.accentSoft, borderColor: theme.accent }]}
-                >
-                  <Text style={[styles.authActionText, { color: theme.accentText, fontWeight: typography.fontWeight.bold }]}>
-                    Criar Conta
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
 
-          {/* Toggle de Tema Claro / Escuro Rápido */}
+            {!isCollapsed && (
+              <Pressable
+                onPress={isAuthenticated ? () => { handleClose(); onPressProfile?.(); } : undefined}
+                style={styles.headerInfo}
+              >
+                <Text style={[styles.headerTitle, { color: theme.textPrimary }]} numberOfLines={1}>
+                  {isAuthenticated && user ? user.name : 'Bíblia Sagrada'}
+                </Text>
+              </Pressable>
+            )}
+
+            {!isCollapsed && (
+              <Pressable
+                onPress={handleClose}
+                style={({ pressed }) => [
+                  styles.closeBtn,
+                  { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                  pressed && { opacity: 0.7 },
+                ]}
+                accessibilityLabel="Fechar menu lateral"
+              >
+                <Feather name="x" size={16} color={theme.textSecondary} />
+              </Pressable>
+            )}
+          </View>
+
+          {/* Barra de Busca em formato Pílula / Botão Compacto */}
           <Pressable
-            onPress={toggleTheme}
+            onPress={handleSearchPress}
             style={({ pressed }) => [
-              styles.themeToggleCard,
+              isCollapsed ? styles.searchBoxCollapsed : styles.searchBoxExpanded,
               {
                 backgroundColor: theme.surfaceSubtle,
                 borderColor: theme.borderSubtle,
@@ -300,67 +265,28 @@ export const SideDrawer = memo(({
               pressed && styles.cardPressed,
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Alternar tema entre claro e escuro"
+            accessibilityLabel="Buscar na Bíblia"
           >
-            <View style={styles.themeToggleLeft}>
-              <Text style={styles.themeToggleIcon}>{isDark ? '🌙' : '☀️'}</Text>
-              <View>
-                <Text style={[styles.themeToggleTitle, { color: theme.textPrimary }]}>
-                  {isDark ? 'Modo Escuro' : 'Modo Claro'}
-                </Text>
-                <Text style={[styles.themeToggleSubtitle, { color: theme.textMuted }]}>
-                  {isDark ? 'Tons aveludados e serenos' : 'Tons claros de linho pastel'}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={[
-                styles.themeSwitchPill,
-                { backgroundColor: theme.accentSoft, borderColor: theme.accent },
-              ]}
-            >
-              <Text style={[styles.themeSwitchText, { color: theme.accentText }]}>
-                {isDark ? 'Mudar ☀️' : 'Mudar 🌙'}
+            <Feather name="search" size={17} color={theme.textMuted} />
+            {!isCollapsed && (
+              <Text style={[styles.searchPlaceholder, { color: theme.textMuted }]}>
+                Search...
               </Text>
-            </View>
+            )}
           </Pressable>
 
-          {/* Ação rápida de Busca em destaque */}
-          <Pressable
-            onPress={handleSearchPress}
-            style={({ pressed }) => [
-              styles.searchActionCard,
-              { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
-              pressed && styles.cardPressed,
-            ]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.searchActionIcon}>🔍</Text>
-            <View style={styles.searchActionTextWrapper}>
-              <Text style={[styles.searchActionTitle, { color: theme.textPrimary }]}>
-                Buscar na Bíblia
-              </Text>
-              <Text style={[styles.searchActionSubtitle, { color: theme.textMuted }]}>
-                Livro, capítulo ou versículo
-              </Text>
-            </View>
-            <Text style={[styles.searchActionArrow, { color: theme.textSecondary }]}>›</Text>
-          </Pressable>
-
-          {/* Separador minimalista */}
-          <View style={[styles.divider, { backgroundColor: theme.divider }]} />
-
-          {/* Lista de Navegação Principal */}
-          <View style={styles.menuSection}>
-            <Text style={[styles.sectionHeading, { color: theme.textMuted }]}>NAVEGAÇÃO</Text>
+          {/* Lista Vertical de Itens de Navegação */}
+          <View style={styles.menuList}>
             {menuItems.map((item) => {
               const isActive = activeId === item.id;
+              const hasBadge = typeof item.badgeCount === 'number' && item.badgeCount > 0;
+
               return (
                 <Pressable
                   key={item.id}
                   onPress={() => handleItemPress(item.id)}
                   style={({ pressed }) => [
-                    styles.menuItem,
+                    isCollapsed ? styles.menuItemCollapsed : styles.menuItemExpanded,
                     isActive && {
                       backgroundColor: theme.surfaceSubtle,
                       borderColor: theme.borderSubtle,
@@ -369,53 +295,166 @@ export const SideDrawer = memo(({
                   ]}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: isActive }}
+                  accessibilityLabel={item.label}
                 >
-                  <View style={styles.menuItemLeft}>
-                    <Text style={styles.menuItemIcon}>{item.icon}</Text>
-                    <Text
-                      style={[
-                        styles.menuItemLabel,
-                        { color: isActive ? theme.textPrimary : theme.textSecondary },
-                        isActive && styles.menuItemLabelActive,
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
+                  <View style={styles.menuItemContent}>
+                    <Feather
+                      name={item.iconName}
+                      size={18}
+                      color={isActive ? theme.textPrimary : theme.textSecondary}
+                    />
+                    {!isCollapsed && (
+                      <Text
+                        style={[
+                          styles.menuItemLabel,
+                          { color: isActive ? theme.textPrimary : theme.textSecondary },
+                          isActive && styles.menuItemLabelActive,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    )}
                   </View>
 
-                  {typeof item.badgeCount === 'number' && (
+                  {/* Badge de versículos guardados com UX elegante */}
+                  {!isCollapsed && hasBadge && (
                     <View
                       style={[
-                        styles.badgeBadge,
-                        { backgroundColor: theme.accent },
+                        styles.badgePill,
+                        {
+                          backgroundColor: theme.accentSoft,
+                          borderColor: theme.accent,
+                        },
                       ]}
                     >
-                      <Text style={[styles.badgeBadgeText, { color: theme.accentText }]}>
+                      <Feather name="bookmark" size={10} color={theme.accentText} style={{ marginRight: 3 }} />
+                      <Text style={[styles.badgePillText, { color: theme.accentText }]}>
                         {item.badgeCount}
                       </Text>
                     </View>
                   )}
 
-                  {isActive && (
-                    <View style={[styles.activeDot, { backgroundColor: theme.accent }]} />
+                  {/* Indicador sutil para modo rail compacto */}
+                  {isCollapsed && hasBadge && (
+                    <View
+                      style={[
+                        styles.collapsedBadgeDot,
+                        { backgroundColor: theme.accent, borderColor: theme.surfaceCard },
+                      ]}
+                    />
                   )}
                 </Pressable>
               );
             })}
           </View>
 
-          {/* Rodapé da Navbar Lateral */}
-          <View style={styles.footerSection}>
-            <View
-              style={[
-                styles.devotionalQuoteBox,
-                { backgroundColor: theme.surfaceSubtle, borderLeftColor: theme.accent },
-              ]}
-            >
-              <Text style={[styles.quoteText, { color: theme.textSecondary }]}>
-                “Lâmpada para os meus pés é tua palavra e luz para o meu caminho.”
-              </Text>
-              <Text style={[styles.quoteRef, { color: theme.accentText }]}>Salmos 119:105</Text>
+          {/* Rodapé Fixo no Estilo Duck UI */}
+          <View style={styles.footer}>
+            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
+
+            {/* Botão de Configurações do Perfil (no rodapé, perto do logout e tema) */}
+            {isAuthenticated && (
+              <Pressable
+                onPress={() => {
+                  try {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  } catch {
+                    // Fallback
+                  }
+                  handleClose();
+                  onPressProfile?.();
+                }}
+                style={({ pressed }) => [
+                  isCollapsed ? styles.actionRowCollapsed : styles.actionRowExpanded,
+                  pressed && { opacity: 0.7 },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir configurações do perfil"
+              >
+                <Feather name="settings" size={18} color={theme.textPrimary} />
+                {!isCollapsed && (
+                  <View style={styles.profileActionContent}>
+                    <Text style={[styles.actionLabel, { color: theme.textPrimary }]}>
+                      Configurações do Perfil
+                    </Text>
+                    <Feather name="chevron-right" size={14} color={theme.textMuted} />
+                  </View>
+                )}
+              </Pressable>
+            )}
+
+            {/* Ação de Logout ou Login/Cadastro */}
+            {isAuthenticated ? (
+              <Pressable
+                onPress={() => {
+                  try {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  } catch {
+                    // Fallback
+                  }
+                  void signOut();
+                }}
+                style={({ pressed }) => [
+                  isCollapsed ? styles.actionRowCollapsed : styles.actionRowExpanded,
+                  pressed && { opacity: 0.7 },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Sair da conta"
+              >
+                <Feather name="log-out" size={18} color={theme.danger || theme.textSecondary} />
+                {!isCollapsed && (
+                  <Text style={[styles.actionLabel, { color: theme.textSecondary }]}>
+                    Logout
+                  </Text>
+                )}
+              </Pressable>
+            ) : (
+              <View style={[isCollapsed ? styles.actionRowCollapsed : styles.actionRowExpanded]}>
+                <Pressable
+                  onPress={() => {
+                    handleClose();
+                    onPressSignIn?.();
+                  }}
+                  style={({ pressed }) => [
+                    styles.guestActionBtn,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Entrar na conta"
+                >
+                  <Feather name="log-in" size={18} color={theme.textPrimary} />
+                  {!isCollapsed && (
+                    <Text style={[styles.actionLabel, { color: theme.textPrimary }]}>
+                      Entrar
+                    </Text>
+                  )}
+                </Pressable>
+
+                {!isCollapsed && onPressSignUp && (
+                  <Pressable
+                    onPress={() => {
+                      handleClose();
+                      onPressSignUp();
+                    }}
+                    style={({ pressed }) => [
+                      styles.signUpPill,
+                      { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+                      pressed && { opacity: 0.8 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Criar nova conta"
+                  >
+                    <Text style={[styles.signUpPillText, { color: theme.accentText }]}>
+                      Cadastrar
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+
+            {/* Alternador de Tema customizado com Pílula e ícones Sol/Lua */}
+            <View style={styles.themeContainer}>
+              <ThemePillSwitch compact={isCollapsed} />
             </View>
           </View>
         </View>
@@ -435,47 +474,57 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: 0,
-    borderTopRightRadius: borderRadius.lg,
-    borderBottomRightRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.xl,
+    borderBottomRightRadius: borderRadius.xl,
     overflow: 'hidden',
     borderRightWidth: 1,
   },
   drawerInner: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md + 2,
     justifyContent: 'space-between',
   },
-  drawerHeader: {
+  drawerInnerCollapsed: {
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  brandRow: {
-    flexDirection: 'row',
+  headerRowCollapsed: {
+    justifyContent: 'center',
+  },
+  brandLogoBox: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
-    gap: spacing.sm + 2,
+    justifyContent: 'center',
   },
-  brandBadge: {
+  logoBadge: {
     width: 36,
     height: 36,
-    borderRadius: borderRadius.full,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandBadgeIcon: {
-    fontSize: 16,
+  logoIconText: {
+    fontSize: 18,
     fontWeight: typography.fontWeight.bold,
   },
-  brandTitle: {
+  headerInfo: {
+    flex: 1,
+    marginLeft: spacing.sm + 4,
+    marginRight: spacing.xs,
+    justifyContent: 'center',
+  },
+  headerTitle: {
     fontSize: typography.fontSize.md,
     fontWeight: typography.fontWeight.bold,
     letterSpacing: typography.letterSpacing.tight,
-  },
-  brandSubtitle: {
-    fontSize: 11,
-    fontWeight: typography.fontWeight.medium,
   },
   closeBtn: {
     width: 32,
@@ -485,224 +534,135 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeBtnPressed: {
-    opacity: 0.7,
-  },
-  closeBtnText: {
-    fontSize: 14,
-    fontWeight: typography.fontWeight.bold,
-  },
-  themeToggleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
+  searchBoxExpanded: {
+    height: 42,
+    borderRadius: 12,
     borderWidth: 1,
-    marginTop: spacing.sm,
-  },
-  themeToggleLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    flex: 1,
-  },
-  themeToggleIcon: {
-    fontSize: 18,
-  },
-  themeToggleTitle: {
-    fontSize: typography.fontSize.xs + 2,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  themeToggleSubtitle: {
-    fontSize: 10,
-  },
-  themeSwitchPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-  },
-  themeSwitchText: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-  },
-  searchActionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
+  },
+  searchBoxCollapsed: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     borderWidth: 1,
-    marginTop: spacing.sm,
-  },
-  searchActionIcon: {
-    fontSize: 16,
-    marginRight: spacing.sm,
-  },
-  searchActionTextWrapper: {
-    flex: 1,
-  },
-  searchActionTitle: {
-    fontSize: typography.fontSize.xs + 2,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  searchActionSubtitle: {
-    fontSize: 10,
-  },
-  searchActionArrow: {
-    fontSize: 18,
-  },
-  cardPressed: {
-    opacity: 0.85,
-  },
-  divider: {
-    height: 1,
-    marginVertical: spacing.sm,
-  },
-  menuSection: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  sectionHeading: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-    letterSpacing: typography.letterSpacing.extraWide,
-    marginBottom: spacing.xs,
-  },
-  menuItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    marginTop: spacing.md,
+  },
+  searchPlaceholder: {
+    fontSize: typography.fontSize.sm,
+    marginLeft: spacing.sm,
+  },
+  menuList: {
+    flex: 1,
+    marginTop: spacing.lg,
+    gap: spacing.xs + 2,
+  },
+  menuItemExpanded: {
+    height: 44,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'transparent',
-  },
-  menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm + 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md - 2,
   },
-  menuItemIcon: {
-    fontSize: 16,
+  menuItemCollapsed: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   menuItemLabel: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.medium,
   },
   menuItemLabelActive: {
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: typography.fontWeight.semibold,
   },
-  badgeBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-    borderRadius: borderRadius.full,
-  },
-  badgeBadgeText: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-  },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: borderRadius.full,
-  },
-  footerSection: {
-    paddingTop: spacing.xs,
-  },
-  devotionalQuoteBox: {
-    padding: spacing.md,
-    borderRadius: borderRadius.sm,
-    borderLeftWidth: 3,
-  },
-  quoteText: {
-    fontSize: 11,
-    fontStyle: 'italic',
-    lineHeight: 16,
-    marginBottom: 4,
-  },
-  quoteRef: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-  },
-  accountCard: {
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    gap: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  accountInfoRow: {
+  badgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-  },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: typography.fontSize.sm,
+  badgePillText: {
+    fontSize: 11,
     fontWeight: typography.fontWeight.bold,
   },
-  accountTextWrapper: {
+  collapsedBadgeDot: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+  },
+  footer: {
+    paddingBottom: spacing.xs,
+  },
+  divider: {
+    height: 1,
+    marginBottom: spacing.sm,
+  },
+  profileActionContent: {
     flex: 1,
-  },
-  accountName: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.bold,
-  },
-  accountEmail: {
-    fontSize: typography.fontSize.xs,
-  },
-  accountCardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.xs,
-    paddingTop: spacing.xs,
   },
-  editProfileText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  logoutBtn: {
-    paddingVertical: spacing.xs,
-  },
-  logoutBtnText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  guestTitle: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.bold,
-  },
-  guestSubtitle: {
-    fontSize: typography.fontSize.xs,
-    lineHeight: 16,
-  },
-  authBtnRow: {
+  actionRowExpanded: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    gap: spacing.sm + 2,
   },
-  authActionBtn: {
-    flex: 1,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
+  actionRowCollapsed: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: spacing.sm,
   },
-  authActionText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
+  actionLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+  },
+  guestActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  signUpPill: {
+    marginLeft: 'auto',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  signUpPillText: {
+    fontSize: 11,
+    fontWeight: typography.fontWeight.bold,
+  },
+  themeContainer: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  cardPressed: {
+    opacity: 0.82,
   },
 });
