@@ -42,4 +42,24 @@ export const authApi = {
       skipAuth: true,
     });
   },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>('/auth/password/forgot', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    });
+  },
+
+  async resetPassword(dto: {
+    email: string;
+    code: string;
+    newPassword: string;
+  }): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>('/auth/password/reset', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+      skipAuth: true,
+    });
+  },
 };

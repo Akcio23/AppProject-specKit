@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -12,6 +13,11 @@ import { SessionsService } from './sessions.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+
+import { MailService } from '../mail/mail.service';
+import { ResetCodesService } from './reset-codes.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 export interface UserDto {
   id: string;
@@ -47,6 +53,8 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly sessionsService: SessionsService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
+    private readonly resetCodesService: ResetCodesService,
   ) {}
 
   private generateAccessToken(userId: string, sessionId: string, email: string): string {
@@ -244,5 +252,78 @@ export class AuthService {
    */
   async logout(dto: RefreshTokenDto): Promise<void> {
     await this.sessionsService.revokeSession(dto.refreshToken);
+  }
+
+  /**
+   * Solicitação de recuperação de senha com mitigação de enumeração de usuários (US5).
+   * Retorna sempre a mesma mensagem de sucesso mesmo se o e-mail não existir.
+   */
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true, name: true, email: true },
+    });
+
+    if (user) {
+      const code = await this.resetCodesService.generateCode(user.id);
+      await this.mailService.sendPasswordResetCode(user.email, code, user.name);
+    } else {
+      // Executa hash dummy para equiparar o tempo de resposta e evitar detecção
+      await this.passwordService.verifyDummy('DummyPassword@123');
+    }
+
+    return {
+      message:
+        'Se o e-mail estiver cadastrado, você receberá um código de recuperação de 6 dígitos em instantes.',
+    };
+  }
+
+  /**
+   * Redefinição de senha com validação do código e revogação de todas as sessões ativas (US5).
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Código de recuperação inválido ou expirado.');
+    }
+
+    // 1. Valida e consome o código de 6 dígitos
+    await this.resetCodesService.verifyAndConsumeCode(user.id, dto.code);
+
+    // 2. Calcula hash da nova senha com Argon2id
+    const newPasswordHash = await this.passwordService.hash(dto.newPassword);
+
+    // 3. Atualiza senha do usuário e reseta bloqueios por força bruta
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: newPasswordHash,
+        passwordChangedAt: new Date(),
+        failedLoginCount: 0,
+        lockedUntil: null,
+      },
+    });
+
+    // 4. Revoga TODAS as sessões ativas deste usuário em todos os aparelhos
+    await this.prisma.session.updateMany({
+      where: {
+        userId: user.id,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+        revokedReason: 'password_reset',
+      },
+    });
+
+    return {
+      message: 'Senha redefinida com sucesso! Você já pode entrar com sua nova senha.',
+    };
   }
 }

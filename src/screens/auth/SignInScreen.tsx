@@ -129,6 +129,16 @@ export const SignInScreen = memo(({ navigation }: RootStackScreenProps<'SignIn'>
             testID="signin-password-input"
           />
 
+          <Pressable
+            onPress={() => navigation.navigate('ForgotPassword')}
+            style={styles.forgotBtn}
+            accessibilityLabel="Esqueci minha senha"
+          >
+            <Text style={[styles.forgotText, { color: theme.accentText }]}>
+              Esqueci minha senha
+            </Text>
+          </Pressable>
+
           <Button
             label="Entrar na Minha Conta"
             onPress={handleLogin}
@@ -216,6 +226,15 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     marginBottom: spacing.xs,
     letterSpacing: typography.letterSpacing.wide,
+  },
+  forgotBtn: {
+    alignSelf: 'flex-end',
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  forgotText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
   },
   footerRow: {
     flexDirection: 'row',

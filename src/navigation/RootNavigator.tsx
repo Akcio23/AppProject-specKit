@@ -6,6 +6,8 @@ import { BibleSearchScreen } from '@/screens/BibleSearchScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
 import { SignUpScreen } from '@/screens/auth/SignUpScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
+import { ForgotPasswordScreen } from '@/screens/auth/ForgotPasswordScreen';
+import { ResetPasswordScreen } from '@/screens/auth/ResetPasswordScreen';
 import { typography } from '@/constants/theme';
 import { RootStackParamList } from './types';
 import { useTheme } from '@/hooks/useTheme';
@@ -60,6 +62,16 @@ export function RootNavigator() {
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResetPassword"
+          component={ResetPasswordScreen}
           options={{ presentation: 'modal', headerShown: false }}
         />
       </Stack.Navigator>

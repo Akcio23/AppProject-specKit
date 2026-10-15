@@ -13,6 +13,9 @@ export const TextField = memo(
     autoFocus = false,
     accessibilityLabel,
     testID,
+    autoCapitalize = 'words',
+    keyboardType = 'default',
+    maxLength,
   }: TextFieldProps) => {
     const { theme } = useTheme();
     const [focused, setFocused] = useState(false);
@@ -28,7 +31,9 @@ export const TextField = memo(
         autoFocus={autoFocus}
         returnKeyType="search"
         autoCorrect={false}
-        autoCapitalize="words"
+        autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
+        maxLength={maxLength}
         accessibilityLabel={accessibilityLabel ?? placeholder}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}

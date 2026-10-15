@@ -52,6 +52,8 @@ export interface AppTheme {
   borderSubtle: string;
   divider: string;
   quoteBorder: string;
+  success: string;
+  danger: string;
   statusBar: 'light-content' | 'dark-content';
 }
 
@@ -73,6 +75,8 @@ export const lightTheme: AppTheme = {
   borderSubtle: '#E8E1D5',
   divider: 'rgba(92, 78, 67, 0.08)',
   quoteBorder: pastelPalette.yellowPastel,
+  success: pastelPalette.successPastel,
+  danger: pastelPalette.errorPastel,
   statusBar: 'dark-content',
 };
 
@@ -94,6 +98,8 @@ export const darkTheme: AppTheme = {
   borderSubtle: 'rgba(255, 255, 255, 0.06)',
   divider: 'rgba(255, 255, 255, 0.06)',
   quoteBorder: pastelPalette.yellowPastel,
+  success: pastelPalette.successPastel,
+  danger: pastelPalette.errorPastel,
   statusBar: 'light-content',
 };
 

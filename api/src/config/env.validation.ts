@@ -6,6 +6,11 @@ export interface EnvironmentVariables {
   JWT_EXPIRES_IN: string;
   RESET_CODE_PEPPER: string;
   ALLOWED_ORIGINS: string;
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  SMTP_USER?: string;
+  SMTP_PASS?: string;
+  SMTP_FROM: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
@@ -16,6 +21,13 @@ export function validateEnv(config: Record<string, unknown>): EnvironmentVariabl
   const jwtExpiresIn = (config.JWT_EXPIRES_IN as string) ?? '15m';
   const resetCodePepper = (config.RESET_CODE_PEPPER as string) ?? 'dev_pepper_default';
   const allowedOrigins = (config.ALLOWED_ORIGINS as string) ?? '*';
+
+  const smtpHost = (config.SMTP_HOST as string) ?? 'localhost';
+  const smtpPort = Number(config.SMTP_PORT ?? 1025);
+  const smtpUser = config.SMTP_USER ? String(config.SMTP_USER) : undefined;
+  const smtpPass = config.SMTP_PASS ? String(config.SMTP_PASS) : undefined;
+  const smtpFrom =
+    (config.SMTP_FROM as string) ?? 'Bíblia Sagrada Mobile <nao-responda@bibliamobile.app>';
 
   if (!databaseUrl) {
     throw new Error('A variável de ambiente DATABASE_URL é obrigatória.');
@@ -33,5 +45,10 @@ export function validateEnv(config: Record<string, unknown>): EnvironmentVariabl
     JWT_EXPIRES_IN: jwtExpiresIn,
     RESET_CODE_PEPPER: resetCodePepper,
     ALLOWED_ORIGINS: allowedOrigins,
+    SMTP_HOST: smtpHost,
+    SMTP_PORT: smtpPort,
+    SMTP_USER: smtpUser,
+    SMTP_PASS: smtpPass,
+    SMTP_FROM: smtpFrom,
   };
 }

@@ -8,6 +8,9 @@ import { PasswordService } from './password.service';
 import { SessionsService } from './sessions.service';
 import { JwtStrategy } from './jwt.strategy';
 
+import { MailModule } from '../mail/mail.module';
+import { ResetCodesService } from './reset-codes.service';
+
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -18,9 +21,22 @@ import { JwtStrategy } from './jwt.strategy';
         secret: config.get<string>('JWT_SECRET'),
       }),
     }),
+    MailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, SessionsService, JwtStrategy],
-  exports: [AuthService, SessionsService, JwtStrategy, PassportModule],
+  providers: [
+    AuthService,
+    PasswordService,
+    SessionsService,
+    ResetCodesService,
+    JwtStrategy,
+  ],
+  exports: [
+    AuthService,
+    SessionsService,
+    ResetCodesService,
+    JwtStrategy,
+    PassportModule,
+  ],
 })
 export class AuthModule {}

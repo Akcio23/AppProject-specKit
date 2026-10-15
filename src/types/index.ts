@@ -33,6 +33,9 @@ export interface TextFieldProps {
   autoFocus?: boolean;
   accessibilityLabel?: string;
   testID?: string;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'number-pad';
+  maxLength?: number;
 }
 
 export type StateMessageVariant = 'loading' | 'error' | 'empty';

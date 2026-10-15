@@ -6,6 +6,8 @@ export type RootStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
   Profile: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { email?: string } | undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
