@@ -72,6 +72,10 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
     navigation.navigate('SignUp');
   }, [navigation]);
 
+  const handleOpenProfile = useCallback(() => {
+    navigation.navigate('Profile');
+  }, [navigation]);
+
   const handleShareSaved = useCallback(async (reference: string, text: string, translation: string) => {
     try {
       await Share.share({
@@ -388,6 +392,7 @@ export const WelcomeScreen = memo(({ navigation }: RootStackScreenProps<'Welcome
         savedCount={savedVerses.length}
         onPressSignIn={handleOpenSignIn}
         onPressSignUp={handleOpenSignUp}
+        onPressProfile={handleOpenProfile}
       />
     </View>
   );

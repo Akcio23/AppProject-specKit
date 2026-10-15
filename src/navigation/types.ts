@@ -5,6 +5,7 @@ export type RootStackParamList = {
   BibleSearch: { initialReference?: string } | undefined;
   SignIn: undefined;
   SignUp: undefined;
+  Profile: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<

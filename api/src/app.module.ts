@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { PreferencesModule } from './preferences/preferences.module';
 import { SavedVersesModule } from './saved-verses/saved-verses.module';
+import { UsersModule } from './users/users.module';
+import { FilesModule } from './files/files.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -29,6 +31,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     HealthModule,
     PreferencesModule,
     SavedVersesModule,
+    UsersModule,
+    FilesModule,
   ],
   providers: [
     {

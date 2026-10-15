@@ -6,3 +6,5 @@ export { FormError } from './FormError';
 export { StateMessage } from './StateMessage';
 export { TopicMenu, type TopicTabItem } from './TopicMenu';
 export { SideDrawer, type DrawerMenuItem } from './SideDrawer';
+export { Avatar, type AvatarProps } from './Avatar';
+

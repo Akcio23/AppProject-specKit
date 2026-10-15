@@ -124,17 +124,17 @@
 **Independent Test**: Abrir perfil do usuário → selecionar foto da galeria → foto é exibida com corte 1:1 e avatar atualizado → remover foto → avatar exibe iniciais (Cenários V9 e V10).
 
 ### Backend (Storage & Processamento de Imagens)
-- [ ] T056 [P] [US4] Implementar StorageService com driver local para gravação e deleção segura em api/src/storage/storage.service.ts
-- [ ] T057 [US4] Configurar upload com verificação de magic bytes (file-type), reprocessamento via Sharp (512x512 WEBP, strip EXIF) e limite de 5MB em api/src/users/users-photo.service.ts
-- [ ] T058 [US4] Implementar endpoints GET /me, PATCH /me, PUT /me/photo e DELETE /me/photo em api/src/users/users.controller.ts
-- [ ] T059 [P] [US4] Configurar rota estática pública para servir avatares /files/avatars/:file com header de cache imutável em api/src/main.ts
+- [x] T056 [P] [US4] Implementar StorageService com driver local para gravação e deleção segura em api/src/storage/storage.service.ts
+- [x] T057 [US4] Configurar upload com verificação de magic bytes (file-type), reprocessamento via Sharp (512x512 WEBP, strip EXIF) e limite de 5MB em api/src/users/users-photo.service.ts
+- [x] T058 [US4] Implementar endpoints GET /me, PATCH /me, PUT /me/photo e DELETE /me/photo em api/src/users/users.controller.ts
+- [x] T059 [P] [US4] Configurar rota estática pública para servir avatares /files/avatars/:file com header de cache imutável em api/src/main.ts
 
 ### App (Componentes e Tela de Perfil)
-- [ ] T060 [P] [US4] Instalar expo-image-picker, expo-image-manipulator e expo-image em package.json
-- [ ] T061 [P] [US4] Criar componente Avatar com suporte a imagem com cache ou iniciais do nome nos tons pasteis em src/components/ui/Avatar.tsx
-- [ ] T062 [US4] Criar hook useCurrentUser para expor dados do usuário ativo e função de atualização em src/hooks/useCurrentUser.ts
-- [ ] T063 [US4] Implementar tela ProfileScreen com edição de nome, seleção de foto e feedback visual em src/screens/ProfileScreen.tsx
-- [ ] T064 [US4] Adicionar rota de Profile no RootNavigator e link direto no cabeçalho/SideDrawer em src/navigation/
+- [x] T060 [P] [US4] Instalar expo-image-picker, expo-image-manipulator e expo-image em package.json
+- [x] T061 [P] [US4] Criar componente Avatar com suporte a imagem com cache ou iniciais do nome nos tons pasteis em src/components/ui/Avatar.tsx
+- [x] T062 [US4] Criar hook useCurrentUser para expor dados do usuário ativo e função de atualização em src/hooks/useCurrentUser.ts
+- [x] T063 [US4] Implementar tela ProfileScreen com edição de nome, seleção de foto e feedback visual em src/screens/ProfileScreen.tsx
+- [x] T064 [US4] Adicionar rota de Profile no RootNavigator e link direto no cabeçalho/SideDrawer em src/navigation/
 
 **Checkpoint**: Perfil completo com upload de avatar seguro e ágil.
 

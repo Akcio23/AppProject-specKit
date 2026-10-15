@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { spacing, borderRadius, typography, shadows } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { useSessionStore } from '@/stores/useSessionStore';
+import { Avatar } from './Avatar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(310, Math.floor(SCREEN_WIDTH * 0.82));
@@ -31,6 +32,7 @@ interface SideDrawerProps {
   onOpenSearch: () => void;
   onPressSignIn?: () => void;
   onPressSignUp?: () => void;
+  onPressProfile?: () => void;
   savedCount?: number;
 }
 
@@ -42,6 +44,7 @@ export const SideDrawer = memo(({
   onOpenSearch,
   onPressSignIn,
   onPressSignUp,
+  onPressProfile,
   savedCount = 0,
 }: SideDrawerProps) => {
   const insets = useSafeAreaInsets();
@@ -205,28 +208,20 @@ export const SideDrawer = memo(({
 
           {/* Card de Perfil / Autenticação (SPEC 005) */}
           {status === 'authenticated' && user ? (
-            <View
-              style={[
+            <Pressable
+              onPress={() => {
+                handleClose();
+                onPressProfile?.();
+              }}
+              style={({ pressed }) => [
                 styles.accountCard,
                 { backgroundColor: theme.surfaceSubtle, borderColor: theme.borderSubtle },
+                pressed && { opacity: 0.8 },
               ]}
+              accessibilityLabel="Abrir perfil da conta"
             >
               <View style={styles.accountInfoRow}>
-                <View
-                  style={[
-                    styles.avatarCircle,
-                    { backgroundColor: theme.accentSoft, borderColor: theme.accent },
-                  ]}
-                >
-                  <Text style={[styles.avatarText, { color: theme.accentText }]}>
-                    {user.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </Text>
-                </View>
+                <Avatar name={user.name} photoUrl={user.photoUrl} size="md" />
                 <View style={styles.accountTextWrapper}>
                   <Text style={[styles.accountName, { color: theme.textPrimary }]} numberOfLines={1}>
                     {user.name}
@@ -237,19 +232,24 @@ export const SideDrawer = memo(({
                 </View>
               </View>
 
-              <Pressable
-                onPress={() => void signOut()}
-                style={({ pressed }) => [
-                  styles.logoutBtn,
-                  pressed && { opacity: 0.7 },
-                ]}
-                accessibilityLabel="Sair da conta"
-              >
-                <Text style={[styles.logoutBtnText, { color: theme.textSecondary }]}>
-                  Sair da conta →
+              <View style={styles.accountCardFooter}>
+                <Text style={[styles.editProfileText, { color: theme.accent }]}>
+                  Editar perfil ✏️
                 </Text>
-              </Pressable>
-            </View>
+                <Pressable
+                  onPress={() => void signOut()}
+                  style={({ pressed }) => [
+                    styles.logoutBtn,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  accessibilityLabel="Sair da conta"
+                >
+                  <Text style={[styles.logoutBtnText, { color: theme.textSecondary }]}>
+                    Sair →
+                  </Text>
+                </Pressable>
+              </View>
+            </Pressable>
           ) : (
             <View
               style={[
@@ -662,10 +662,19 @@ const styles = StyleSheet.create({
   accountEmail: {
     fontSize: typography.fontSize.xs,
   },
-  logoutBtn: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
+  accountCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: spacing.xs,
+    paddingTop: spacing.xs,
+  },
+  editProfileText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  logoutBtn: {
+    paddingVertical: spacing.xs,
   },
   logoutBtnText: {
     fontSize: typography.fontSize.xs,

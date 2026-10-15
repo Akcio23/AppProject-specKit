@@ -16,6 +16,8 @@ web-build/
 .env
 .env*.local
 *.log
+uploads/
+**/uploads/
 
 # Python / UV
 __pycache__/
