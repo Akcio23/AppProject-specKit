@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { apiClient, API_BASE_URL, ApiError, getAuthToken } from './apiClient';
+import { apiClient, getApiBaseUrl, ApiError, getAuthToken } from './apiClient';
 import { User } from '@/types/auth';
 import { normalizeUser } from './userUtils';
 
@@ -22,7 +22,7 @@ export const usersApi = {
   },
 
   async uploadPhoto(fileUri: string, _mimeType = 'image/jpeg'): Promise<User> {
-    const url = `${API_BASE_URL}/me/photo`;
+    const url = `${getApiBaseUrl()}/me/photo`;
     const token = getAuthToken();
 
     const response = await FileSystem.uploadAsync(url, fileUri, {

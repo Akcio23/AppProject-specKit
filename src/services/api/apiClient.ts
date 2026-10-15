@@ -1,7 +1,30 @@
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import { ApiErrorResponse } from '@/types/auth';
 
-const resolveBaseUrl = (): string => {
+const getBundleHost = (): string | null => {
+  try {
+    const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
+    if (scriptURL) {
+      const match = scriptURL.match(/https?:\/\/([^:/]+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+};
+
+export const getApiBaseUrl = (): string => {
+  // Em modo de desenvolvimento, detecta o IP real da máquina a partir do script do Metro
+  if (__DEV__) {
+    const bundleHost = getBundleHost();
+    if (bundleHost && bundleHost !== 'localhost' && bundleHost !== '127.0.0.1') {
+      return `http://${bundleHost}:3000/api/v1`;
+    }
+  }
+
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) {
     if (Platform.OS === 'android' && envUrl.includes('localhost')) {
@@ -13,7 +36,7 @@ const resolveBaseUrl = (): string => {
   return `http://${defaultHost}:3000/api/v1`;
 };
 
-export const API_BASE_URL: string = resolveBaseUrl();
+export const API_BASE_URL: string = getApiBaseUrl();
 
 export class ApiError extends Error {
   constructor(
@@ -69,7 +92,7 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const { skipAuth = false, timeoutMs = 30000, ...fetchOptions } = options;
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const url = `${getApiBaseUrl()}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   // Detecção resiliente de FormData no ambiente React Native / Hermes / JSC
   const isFormData =

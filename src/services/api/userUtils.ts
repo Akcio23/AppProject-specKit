@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './apiClient';
+import { getApiBaseUrl } from './apiClient';
 import { User } from '@/types/auth';
 
 /**
@@ -6,7 +6,7 @@ import { User } from '@/types/auth';
  */
 export function normalizeUser(user: User): User {
   if (user.photoUrl && user.photoUrl.startsWith('/')) {
-    const baseRoot = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+    const baseRoot = getApiBaseUrl().replace(/\/api\/v1\/?$/, '');
     return {
       ...user,
       photoUrl: `${baseRoot}/api/v1${user.photoUrl}`,
