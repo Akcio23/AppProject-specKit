@@ -147,14 +147,14 @@
 **Independent Test**: Solicitar código de recuperação na tela de login → capturar código no Mailpit local → digitar código e nova senha → logar com sucesso e constatar revogação de outros aparelhos (Cenários V11 e V12).
 
 ### Backend (Mail & Reset Codes)
-- [ ] T065 [P] [US5] Implementar MailService usando Nodemailer configurado para Mailpit local ou SMTP em api/src/mail/mail.service.ts
-- [ ] T066 [US5] Implementar ResetCodesService com geração de código de 6 dígitos, hash HMAC-SHA256 com pepper e controle de tentativas em api/src/auth/reset-codes.service.ts
-- [ ] T067 [US5] Implementar endpoints POST /auth/password/forgot (anti-enumeração) e POST /auth/password/reset (revogação total de sessões) em api/src/auth/auth.controller.ts
+- [x] T065 [P] [US5] Implementar MailService usando Nodemailer configurado para Mailpit local ou SMTP em api/src/mail/mail.service.ts
+- [x] T066 [US5] Implementar ResetCodesService com geração de código de 6 dígitos, hash HMAC-SHA256 com pepper e controle de tentativas em api/src/auth/reset-codes.service.ts
+- [x] T067 [US5] Implementar endpoints POST /auth/password/forgot (anti-enumeração) e POST /auth/password/reset (revogação total de sessões) em api/src/auth/auth.controller.ts
 
 ### App (Telas de Recuperação)
-- [ ] T068 [P] [US5] Implementar tela ForgotPasswordScreen com envio de e-mail e navegação suave em src/screens/auth/ForgotPasswordScreen.tsx
-- [ ] T069 [US5] Implementar tela ResetPasswordScreen com campo de código numérico de 6 dígitos e redefinição de senha em src/screens/auth/ResetPasswordScreen.tsx
-- [ ] T070 [US5] Adicionar rotas ForgotPassword e ResetPassword no RootNavigator em src/navigation/RootNavigator.tsx
+- [x] T068 [P] [US5] Implementar tela ForgotPasswordScreen com envio de e-mail e navegação suave em src/screens/auth/ForgotPasswordScreen.tsx
+- [x] T069 [US5] Implementar tela ResetPasswordScreen com campo de código numérico de 6 dígitos e redefinição de senha em src/screens/auth/ResetPasswordScreen.tsx
+- [x] T070 [US5] Adicionar rotas ForgotPassword e ResetPassword no RootNavigator em src/navigation/RootNavigator.tsx
 
 **Checkpoint**: Recuperação de senha completa com e-mail simulado e revogação em cascata.
 
