@@ -1,7 +1,9 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { apiClient, API_BASE_URL, ApiError } from './apiClient';
-import { useSessionStore } from '@/stores/useSessionStore';
+import { apiClient, API_BASE_URL, ApiError, getAuthToken } from './apiClient';
 import { User } from '@/types/auth';
+import { normalizeUser } from './userUtils';
+
+export { normalizeUser };
 
 export const usersApi = {
   async getProfile(): Promise<User> {
@@ -21,7 +23,7 @@ export const usersApi = {
 
   async uploadPhoto(fileUri: string, _mimeType = 'image/jpeg'): Promise<User> {
     const url = `${API_BASE_URL}/me/photo`;
-    const token = useSessionStore.getState().accessToken;
+    const token = getAuthToken();
 
     const response = await FileSystem.uploadAsync(url, fileUri, {
       httpMethod: 'POST',
@@ -68,14 +70,4 @@ export const usersApi = {
   },
 };
 
-export function normalizeUser(user: User): User {
-  if (user.photoUrl && user.photoUrl.startsWith('/')) {
-    const baseRoot = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-    return {
-      ...user,
-      photoUrl: `${baseRoot}/api/v1${user.photoUrl}`,
-    };
-  }
-  return user;
-}
 

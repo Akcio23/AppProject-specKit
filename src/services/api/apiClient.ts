@@ -45,6 +45,8 @@ export function configureApiClient(config: {
   revocationHandler = config.onRevoked;
 }
 
+export const getAuthToken: TokenProvider = () => tokenProvider();
+
 // Single-flight lock para refresh de token simultâneo
 let refreshPromise: Promise<string | null> | null = null;
 
@@ -169,14 +171,21 @@ export async function apiRequest<T>(
     return (envelope?.data !== undefined ? envelope.data : json) as T;
   } catch (error: unknown) {
     if (error instanceof ApiError) throw error;
-    console.error('[API CLIENT ERROR]', error);
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new ApiError('TIMEOUT', 'O servidor demorou demais para responder.');
+
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const isAbort =
+      (error instanceof Error && error.name === 'AbortError') ||
+      errorMsg.includes('canceled') ||
+      errorMsg.includes('FetchRequestCanceledException');
+
+    if (isAbort) {
+      throw new ApiError('TIMEOUT', 'A requisição foi cancelada ou excedeu o tempo limite.');
     }
-    const realMsg = error instanceof Error ? error.message : String(error);
+
+    console.error('[API CLIENT ERROR]', error);
     throw new ApiError(
       'NETWORK_ERROR',
-      `Não foi possível conectar ao servidor (${realMsg}). Verifique sua conexão.`,
+      `Não foi possível conectar ao servidor (${errorMsg}). Verifique sua conexão.`,
     );
   } finally {
     clearTimeout(timeoutId);

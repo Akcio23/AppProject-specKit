@@ -1,6 +1,6 @@
 import { apiRequest } from './apiClient';
 import { AuthResult, AuthTokens, LoginInput, RegisterInput } from '@/types/auth';
-import { normalizeUser } from './usersApi';
+import { normalizeUser } from './userUtils';
 
 export const authApi = {
   async register(input: RegisterInput): Promise<AuthResult> {
