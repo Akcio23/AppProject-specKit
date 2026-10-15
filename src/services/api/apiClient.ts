@@ -66,19 +66,49 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { skipAuth = false, timeoutMs = 12000, ...fetchOptions } = options;
+  const { skipAuth = false, timeoutMs = 30000, ...fetchOptions } = options;
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
-  const headers = new Headers(fetchOptions.headers);
-  if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
+  // Detecção resiliente de FormData no ambiente React Native / Hermes / JSC
+  const isFormData =
+    Boolean(fetchOptions.body) &&
+    (fetchOptions.body instanceof FormData ||
+      (typeof fetchOptions.body === 'object' && '_parts' in fetchOptions.body!) ||
+      fetchOptions.body?.constructor?.name === 'FormData');
+
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
   }
-  headers.set('Accept', 'application/json');
+
+  // Copia headers adicionais fornecidos
+  if (fetchOptions.headers) {
+    if (fetchOptions.headers instanceof Headers) {
+      fetchOptions.headers.forEach((val, key) => {
+        headers[key] = val;
+      });
+    } else if (Array.isArray(fetchOptions.headers)) {
+      fetchOptions.headers.forEach(([key, val]) => {
+        headers[key] = val;
+      });
+    } else {
+      Object.assign(headers, fetchOptions.headers);
+    }
+  }
+
+  // Se for FormData, NUNCA defina Content-Type manualmente para o fetch calcular o boundary multipart!
+  if (isFormData) {
+    delete headers['Content-Type'];
+    delete headers['content-type'];
+  }
 
   if (!skipAuth) {
     const token = tokenProvider();
     if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+      headers['Authorization'] = `Bearer ${token}`;
     }
   }
 
@@ -97,7 +127,7 @@ export async function apiRequest<T>(
       const newToken = await executeRefresh();
 
       if (newToken) {
-        headers.set('Authorization', `Bearer ${newToken}`);
+        headers['Authorization'] = `Bearer ${newToken}`;
         response = await fetch(url, {
           ...fetchOptions,
           headers,

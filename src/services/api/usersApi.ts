@@ -19,13 +19,19 @@ export const usersApi = {
 
   async uploadPhoto(fileUri: string, mimeType = 'image/jpeg'): Promise<User> {
     const formData = new FormData();
-    const filename = fileUri.split('/').pop() ?? 'avatar.jpg';
+    const rawFilename = fileUri.split('/').pop() ?? 'avatar.jpg';
+    const filename = rawFilename.includes('.') ? rawFilename : `${rawFilename}.jpg`;
+    const cleanMime = filename.endsWith('.png')
+      ? 'image/png'
+      : filename.endsWith('.webp')
+        ? 'image/webp'
+        : mimeType || 'image/jpeg';
 
     // Formato padrão do React Native para upload multipart/form-data
     formData.append('file', {
       uri: fileUri,
       name: filename,
-      type: mimeType,
+      type: cleanMime,
     } as unknown as Blob);
 
     const user = await apiClient.request<User>('/me/photo', {
