@@ -32,15 +32,31 @@ const getBundleHost = (): string | null => {
 };
 
 export const getApiBaseUrl = (): string => {
-  // 1. Em desenvolvimento, prioriza o IP real onde o Expo/Metro está rodando
-  if (__DEV__) {
-    const bundleHost = getBundleHost();
-    if (bundleHost && bundleHost !== 'localhost' && bundleHost !== '127.0.0.1') {
-      return `http://${bundleHost}:3000/api/v1`;
+  // -------------------------------------------------------------
+  // 1. AMBIENTE DE PRODUÇÃO (Deploy na nuvem / EAS Build / Lojas)
+  // -------------------------------------------------------------
+  // No build de release/produção, a flag __DEV__ é false em tempo de compilação.
+  // O bundler (Hermes/Metro) descarta o bloco de desenvolvimento e usa exclusivamente
+  // a URL pública e segura definida na variável de ambiente de produção (ex.: https://api.seudominio.com).
+  if (!__DEV__) {
+    const prodUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (!prodUrl) {
+      throw new Error(
+        'EXPO_PUBLIC_API_URL não foi definida para o ambiente de produção.',
+      );
     }
+    return prodUrl;
   }
 
-  // 2. Se houver EXPO_PUBLIC_API_URL embutido, saneia se tiver o IP antigo em cache
+  // -------------------------------------------------------------
+  // 2. AMBIENTE DE DESENVOLVIMENTO LOCAL (__DEV__ === true)
+  // -------------------------------------------------------------
+  // Detecta automaticamente o IP da máquina do desenvolvedor pelo Metro Bundler
+  const bundleHost = getBundleHost();
+  if (bundleHost && bundleHost !== 'localhost' && bundleHost !== '127.0.0.1') {
+    return `http://${bundleHost}:3000/api/v1`;
+  }
+
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) {
     let sanitized = envUrl;
@@ -53,8 +69,8 @@ export const getApiBaseUrl = (): string => {
     return sanitized;
   }
 
-  // 3. Fallback para o IP atual da máquina na rede local
-  return 'http://192.168.0.2:3000/api/v1';
+  const defaultHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  return `http://${defaultHost}:3000/api/v1`;
 };
 
 export const API_BASE_URL: string = getApiBaseUrl();
