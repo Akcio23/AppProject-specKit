@@ -1,0 +1,341 @@
+{
+  "translation": {
+    "identifier": "almeida",
+    "name": "João Ferreira de Almeida",
+    "language": "Portuguese",
+    "language_code": "por",
+    "license": "Public Domain"
+  },
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Gênesis",
+      "url": "https://bible-api.com/data/almeida/GEN"
+    },
+    {
+      "id": "EXO",
+      "name": "Êxodo",
+      "url": "https://bible-api.com/data/almeida/EXO"
+    },
+    {
+      "id": "LEV",
+      "name": "Levítico",
+      "url": "https://bible-api.com/data/almeida/LEV"
+    },
+    {
+      "id": "NUM",
+      "name": "Números",
+      "url": "https://bible-api.com/data/almeida/NUM"
+    },
+    {
+      "id": "DEU",
+      "name": "Deuteronômio",
+      "url": "https://bible-api.com/data/almeida/DEU"
+    },
+    {
+      "id": "JOS",
+      "name": "Josué",
+      "url": "https://bible-api.com/data/almeida/JOS"
+    },
+    {
+      "id": "JDG",
+      "name": "Juízes",
+      "url": "https://bible-api.com/data/almeida/JDG"
+    },
+    {
+      "id": "RUT",
+      "name": "Rute",
+      "url": "https://bible-api.com/data/almeida/RUT"
+    },
+    {
+      "id": "1SA",
+      "name": "1 Samuel",
+      "url": "https://bible-api.com/data/almeida/1SA"
+    },
+    {
+      "id": "2SA",
+      "name": "2 Samuel",
+      "url": "https://bible-api.com/data/almeida/2SA"
+    },
+    {
+      "id": "1KI",
+      "name": "1 Reis",
+      "url": "https://bible-api.com/data/almeida/1KI"
+    },
+    {
+      "id": "2KI",
+      "name": "2 Reis",
+      "url": "https://bible-api.com/data/almeida/2KI"
+    },
+    {
+      "id": "1CH",
+      "name": "1 Crônicas",
+      "url": "https://bible-api.com/data/almeida/1CH"
+    },
+    {
+      "id": "2CH",
+      "name": "2 Crônicas",
+      "url": "https://bible-api.com/data/almeida/2CH"
+    },
+    {
+      "id": "EZR",
+      "name": "Esdras",
+      "url": "https://bible-api.com/data/almeida/EZR"
+    },
+    {
+      "id": "NEH",
+      "name": "Neemias",
+      "url": "https://bible-api.com/data/almeida/NEH"
+    },
+    {
+      "id": "EST",
+      "name": "Ester",
+      "url": "https://bible-api.com/data/almeida/EST"
+    },
+    {
+      "id": "JOB",
+      "name": "Jó",
+      "url": "https://bible-api.com/data/almeida/JOB"
+    },
+    {
+      "id": "PSA",
+      "name": "Salmos",
+      "url": "https://bible-api.com/data/almeida/PSA"
+    },
+    {
+      "id": "PRO",
+      "name": "Provérbios",
+      "url": "https://bible-api.com/data/almeida/PRO"
+    },
+    {
+      "id": "ECC",
+      "name": "Eclesiastes",
+      "url": "https://bible-api.com/data/almeida/ECC"
+    },
+    {
+      "id": "SNG",
+      "name": "Cânticos",
+      "url": "https://bible-api.com/data/almeida/SNG"
+    },
+    {
+      "id": "ISA",
+      "name": "Isaías",
+      "url": "https://bible-api.com/data/almeida/ISA"
+    },
+    {
+      "id": "JER",
+      "name": "Jeremias",
+      "url": "https://bible-api.com/data/almeida/JER"
+    },
+    {
+      "id": "LAM",
+      "name": "Lamentações",
+      "url": "https://bible-api.com/data/almeida/LAM"
+    },
+    {
+      "id": "EZK",
+      "name": "Ezequiel",
+      "url": "https://bible-api.com/data/almeida/EZK"
+    },
+    {
+      "id": "DAN",
+      "name": "Daniel",
+      "url": "https://bible-api.com/data/almeida/DAN"
+    },
+    {
+      "id": "HOS",
+      "name": "Oséias",
+      "url": "https://bible-api.com/data/almeida/HOS"
+    },
+    {
+      "id": "JOL",
+      "name": "Joel",
+      "url": "https://bible-api.com/data/almeida/JOL"
+    },
+    {
+      "id": "AMO",
+      "name": "Amós",
+      "url": "https://bible-api.com/data/almeida/AMO"
+    },
+    {
+      "id": "OBA",
+      "name": "Obadias",
+      "url": "https://bible-api.com/data/almeida/OBA"
+    },
+    {
+      "id": "JON",
+      "name": "Jonas",
+      "url": "https://bible-api.com/data/almeida/JON"
+    },
+    {
+      "id": "MIC",
+      "name": "Miquéias",
+      "url": "https://bible-api.com/data/almeida/MIC"
+    },
+    {
+      "id": "NAM",
+      "name": "Naum",
+      "url": "https://bible-api.com/data/almeida/NAM"
+    },
+    {
+      "id": "HAB",
+      "name": "Habacuque",
+      "url": "https://bible-api.com/data/almeida/HAB"
+    },
+    {
+      "id": "ZEP",
+      "name": "Sofonias",
+      "url": "https://bible-api.com/data/almeida/ZEP"
+    },
+    {
+      "id": "HAG",
+      "name": "Ageu",
+      "url": "https://bible-api.com/data/almeida/HAG"
+    },
+    {
+      "id": "ZEC",
+      "name": "Zacarias",
+      "url": "https://bible-api.com/data/almeida/ZEC"
+    },
+    {
+      "id": "MAL",
+      "name": "Malaquias",
+      "url": "https://bible-api.com/data/almeida/MAL"
+    },
+    {
+      "id": "MAT",
+      "name": "Mateus",
+      "url": "https://bible-api.com/data/almeida/MAT"
+    },
+    {
+      "id": "MRK",
+      "name": "Marcos",
+      "url": "https://bible-api.com/data/almeida/MRK"
+    },
+    {
+      "id": "LUK",
+      "name": "Lucas",
+      "url": "https://bible-api.com/data/almeida/LUK"
+    },
+    {
+      "id": "JHN",
+      "name": "João",
+      "url": "https://bible-api.com/data/almeida/JHN"
+    },
+    {
+      "id": "ACT",
+      "name": "Atos",
+      "url": "https://bible-api.com/data/almeida/ACT"
+    },
+    {
+      "id": "ROM",
+      "name": "Romanos",
+      "url": "https://bible-api.com/data/almeida/ROM"
+    },
+    {
+      "id": "1CO",
+      "name": "1 Coríntios",
+      "url": "https://bible-api.com/data/almeida/1CO"
+    },
+    {
+      "id": "2CO",
+      "name": "2 Coríntios",
+      "url": "https://bible-api.com/data/almeida/2CO"
+    },
+    {
+      "id": "GAL",
+      "name": "Gálatas",
+      "url": "https://bible-api.com/data/almeida/GAL"
+    },
+    {
+      "id": "EPH",
+      "name": "Efésios",
+      "url": "https://bible-api.com/data/almeida/EPH"
+    },
+    {
+      "id": "PHP",
+      "name": "Filipenses",
+      "url": "https://bible-api.com/data/almeida/PHP"
+    },
+    {
+      "id": "COL",
+      "name": "Colossenses",
+      "url": "https://bible-api.com/data/almeida/COL"
+    },
+    {
+      "id": "1TH",
+      "name": "1 Tessalonicenses",
+      "url": "https://bible-api.com/data/almeida/1TH"
+    },
+    {
+      "id": "2TH",
+      "name": "2 Tessalonicenses",
+      "url": "https://bible-api.com/data/almeida/2TH"
+    },
+    {
+      "id": "1TI",
+      "name": "1 Timóteo",
+      "url": "https://bible-api.com/data/almeida/1TI"
+    },
+    {
+      "id": "2TI",
+      "name": "2 Timóteo",
+      "url": "https://bible-api.com/data/almeida/2TI"
+    },
+    {
+      "id": "TIT",
+      "name": "Tito",
+      "url": "https://bible-api.com/data/almeida/TIT"
+    },
+    {
+      "id": "PHM",
+      "name": "Filemom",
+      "url": "https://bible-api.com/data/almeida/PHM"
+    },
+    {
+      "id": "HEB",
+      "name": "Hebreus",
+      "url": "https://bible-api.com/data/almeida/HEB"
+    },
+    {
+      "id": "JAS",
+      "name": "Tiago",
+      "url": "https://bible-api.com/data/almeida/JAS"
+    },
+    {
+      "id": "1PE",
+      "name": "1 Pedro",
+      "url": "https://bible-api.com/data/almeida/1PE"
+    },
+    {
+      "id": "2PE",
+      "name": "2 Pedro",
+      "url": "https://bible-api.com/data/almeida/2PE"
+    },
+    {
+      "id": "1JN",
+      "name": "1 João",
+      "url": "https://bible-api.com/data/almeida/1JN"
+    },
+    {
+      "id": "2JN",
+      "name": "2 João",
+      "url": "https://bible-api.com/data/almeida/2JN"
+    },
+    {
+      "id": "3JN",
+      "name": "3 João",
+      "url": "https://bible-api.com/data/almeida/3JN"
+    },
+    {
+      "id": "JUD",
+      "name": "Judas",
+      "url": "https://bible-api.com/data/almeida/JUD"
+    },
+    {
+      "id": "REV",
+      "name": "Apocalipse",
+      "url": "https://bible-api.com/data/almeida/REV"
+    }
+  ]
+}

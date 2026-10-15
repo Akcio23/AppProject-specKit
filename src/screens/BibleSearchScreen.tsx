@@ -1,13 +1,14 @@
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, StateMessage, TextField } from '@/components/ui';
-import { PassageView } from '@/components/features/bible';
+import { StateMessage } from '@/components/ui';
+import { ControlledBibleSearch, PassageView } from '@/components/features/bible';
 import { usePassage } from '@/hooks/usePassage';
 import { usePreferences } from '@/hooks/usePreferences';
 import { RootStackScreenProps } from '@/navigation/types';
 import { spacing, typography, borderRadius } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { BibleBook, parseBibleReference } from '@/constants/bibleBooksPt';
 
 const EXAMPLES = [
   'João 3:16',
@@ -19,25 +20,41 @@ const EXAMPLES = [
   'Salmos 91:1-2',
 ] as const;
 
-/** Busca de passagens por referência em estética clean pastel. */
+/**
+ * Motor de busca bíblica controlado com seleção pré-definida de livros
+ * e preenchimento flexível de capítulo e versículo (Tradução Almeida - PT-BR).
+ */
 export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>) {
   const insets = useSafeAreaInsets();
   const { theme, isDark, toggleTheme } = useTheme();
   const initialReference = route.params?.initialReference ?? '';
 
-  const [query, setQuery] = useState(initialReference);
-  const [submitted, setSubmitted] = useState(initialReference);
+  const parsedInitial = parseBibleReference(initialReference);
+  const [selectedBook, setSelectedBook] = useState<BibleBook | null>(parsedInitial.book);
+  const [chapterText, setChapterText] = useState<string>(parsedInitial.chapter);
+  const [submitted, setSubmitted] = useState<string>(initialReference);
 
   const { translationId } = usePreferences();
   const passage = usePassage(submitted, translationId);
 
   const handleSubmit = useCallback(() => {
-    const trimmed = query.trim();
-    if (trimmed.length > 0) setSubmitted(trimmed);
-  }, [query]);
+    if (!selectedBook) return;
+    const chapter = chapterText.trim();
+    if (chapter.length === 0) return;
+    const fullRef = `${selectedBook.name} ${chapter}`;
+    setSubmitted(fullRef);
+  }, [selectedBook, chapterText]);
+
+  const handleClear = useCallback(() => {
+    setSelectedBook(null);
+    setChapterText('');
+    setSubmitted('');
+  }, []);
 
   const handleExample = useCallback((reference: string) => {
-    setQuery(reference);
+    const parsed = parseBibleReference(reference);
+    setSelectedBook(parsed.book);
+    setChapterText(parsed.chapter);
     setSubmitted(reference);
   }, []);
 
@@ -53,7 +70,7 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
             📖 Passagens Sugeridas
           </Text>
           <Text style={[styles.emptySubtitle, { color: theme.textSecondary }]}>
-            Toque em um exemplo para ler instantaneamente ou digite uma referência acima:
+            Selecione o livro e capítulo acima ou toque em uma das passagens recomendadas:
           </Text>
           <View style={styles.examples}>
             {EXAMPLES.map((ex) => (
@@ -69,17 +86,27 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
                   pressed && styles.examplePressed,
                 ]}
                 accessibilityRole="button"
+                accessibilityLabel={`Ler passagem sugerida: ${ex}`}
               >
-                <Text style={[styles.exampleText, { color: theme.textPrimary }]}>{ex}</Text>
+                <Text style={[styles.exampleText, { color: theme.textPrimary }]}>
+                  {ex}
+                </Text>
               </Pressable>
             ))}
           </View>
         </View>
       );
     }
+
     if (passage.isPending) {
-      return <StateMessage variant="loading" message={`Buscando ${submitted}...`} />;
+      return (
+        <StateMessage
+          variant="loading"
+          message={`Buscando ${submitted}...`}
+        />
+      );
     }
+
     if (passage.error) {
       const canRetry = passage.error.code !== 'NOT_FOUND';
       return (
@@ -88,7 +115,7 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
             variant="error"
             message={
               passage.error.code === 'NOT_FOUND'
-                ? `Referência "${submitted}" não encontrada. Verifique se o nome do livro e capítulo estão corretos (ex.: João 3:16 ou Salmos 23).`
+                ? `A referência "${submitted}" não foi encontrada. Verifique se o capítulo existe neste livro (ex.: Salmos possui 150 capítulos).`
                 : passage.error.message
             }
             onRetry={canRetry ? handleRetry : undefined}
@@ -97,6 +124,7 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
         </View>
       );
     }
+
     return <PassageView passage={passage.data} />;
   };
 
@@ -112,26 +140,27 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
     >
       <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
 
-      {/* Barra de pesquisa clean */}
-      <View style={styles.searchRow}>
-        <View style={styles.inputWrapper}>
-          <TextField
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Ex.: João 3:16 ou Salmos 23"
-            onSubmitEditing={handleSubmit}
-            autoFocus={initialReference.length === 0}
-            accessibilityLabel="Referência bíblica"
-            testID="bible-search-input"
-          />
+      {/* Barra Superior com Identificação e Alternador de Tema */}
+      <View style={styles.topBar}>
+        <View style={styles.topBarLeft}>
+          <Text style={[styles.topBarTitle, { color: theme.textPrimary }]}>
+            Bíblia Sagrada
+          </Text>
+          <View
+            style={[
+              styles.versionBadge,
+              {
+                backgroundColor: theme.accentSoft,
+                borderColor: theme.accent,
+              },
+            ]}
+          >
+            <Text style={[styles.versionBadgeText, { color: theme.textPrimary }]}>
+              {translationId.toUpperCase()} (PT)
+            </Text>
+          </View>
         </View>
-        <Button
-          label="Buscar"
-          onPress={handleSubmit}
-          disabled={query.trim().length === 0}
-          loading={passage.isFetching}
-          testID="bible-search-submit"
-        />
+
         <Pressable
           onPress={toggleTheme}
           style={({ pressed }) => [
@@ -142,25 +171,25 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
             },
             pressed && styles.themeToggleBtnPressed,
           ]}
-          accessibilityLabel="Alternar tema"
+          accessibilityRole="button"
+          accessibilityLabel="Alternar entre modo claro e escuro"
         >
           <Text style={styles.themeToggleText}>{isDark ? '☀️' : '🌙'}</Text>
         </Pressable>
       </View>
 
-      {/* Indicador discreto da versão ativa */}
-      <View style={styles.versionBar}>
-        <Text style={[styles.versionLabel, { color: theme.textMuted }]}>
-          Versão:{' '}
-          <Text style={[styles.versionHighlight, { color: theme.accentText }]}>
-            {translationId.toUpperCase()}
-          </Text>
-        </Text>
-        <Text style={[styles.versionHint, { color: theme.textMuted }]}>
-          Troque de versão no menu Ajustes ⚙️
-        </Text>
-      </View>
+      {/* Motor de Busca Controlado: Livro Pré-definido + Entrada Livre de Capítulo */}
+      <ControlledBibleSearch
+        selectedBook={selectedBook}
+        chapterText={chapterText}
+        onSelectBook={setSelectedBook}
+        onChangeChapterText={setChapterText}
+        onSubmit={handleSubmit}
+        onClear={submitted.length > 0 ? handleClear : undefined}
+        isLoading={passage.isFetching}
+      />
 
+      {/* Conteúdo da Passagem ou Sugestões */}
       <View style={styles.body}>{renderBody()}</View>
     </View>
   );
@@ -172,17 +201,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
   },
-  searchRow: {
+  topBar: {
     flexDirection: 'row',
-    gap: spacing.xs + 2,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: spacing.xs + 2,
   },
-  inputWrapper: {
-    flex: 1,
+  topBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
+  },
+  topBarTitle: {
+    fontSize: typography.fontSize.md,
+    fontWeight: typography.fontWeight.bold,
+  },
+  versionBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.xs + 2,
+    paddingVertical: 1,
+  },
+  versionBadgeText: {
+    fontSize: 10,
+    fontWeight: typography.fontWeight.bold,
   },
   themeToggleBtn: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     alignItems: 'center',
@@ -193,25 +239,6 @@ const styles = StyleSheet.create({
   },
   themeToggleText: {
     fontSize: 16,
-  },
-  versionBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.xs,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  versionLabel: {
-    fontSize: typography.fontSize.xs,
-  },
-  versionHighlight: {
-    fontWeight: typography.fontWeight.bold,
-  },
-  versionHint: {
-    fontSize: 10,
-    fontStyle: 'italic',
   },
   body: {
     flex: 1,
