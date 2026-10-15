@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
 import { Button, StateMessage } from '@/components/ui';
 import { useRandomVerse } from '@/hooks/useRandomVerse';
@@ -17,10 +17,15 @@ export const VerseOfTheDayCard = memo(({ onReadChapter }: Props) => {
   const { theme } = useTheme();
   const { translationId } = usePreferences();
   const { data, error, isPending, isFetching, refetch } = useRandomVerse(translationId);
-  const { saveVerse, removeSavedVerse, isVerseSaved } = useSavedVerses();
+  const { saveVerse, removeSavedVerse, savedVerses } = useSavedVerses();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const isSaved = data ? isVerseSaved(data.reference) : false;
+  const isSaved = useMemo(() => {
+    if (!data) return false;
+    return savedVerses.some(
+      (v) => v.reference.toLowerCase().trim() === data.reference.toLowerCase().trim(),
+    );
+  }, [data, savedVerses]);
 
   const showFeedback = (msg: string) => {
     setToastMessage(msg);

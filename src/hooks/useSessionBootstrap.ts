@@ -27,9 +27,21 @@ export function useSessionBootstrap() {
         const tokens = await authApi.refresh(refreshToken);
         await saveRefreshToken(tokens.refreshToken);
 
+        // Define temporariamente o token para permitir a requisição do perfil
+        useSessionStore.setState({ accessToken: tokens.accessToken });
+
+        let user = null;
+        try {
+          const { usersApi } = await import('@/services/api/usersApi');
+          user = await usersApi.getProfile();
+        } catch {
+          // Mantém null ou dados em cache se offline
+        }
+
         if (isMounted) {
           useSessionStore.setState({
             accessToken: tokens.accessToken,
+            user,
             status: 'authenticated',
           });
         }

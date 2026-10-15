@@ -40,7 +40,7 @@ export function useOutboxSync() {
     }
 
     const netState = await NetInfo.fetch();
-    if (!netState.isConnected || !netState.isInternetReachable) {
+    if (netState.isConnected === false) {
       return;
     }
 
@@ -81,10 +81,16 @@ export function useOutboxSync() {
             await accountApi.updatePreferences(p);
             dequeueAction(action.id);
           }
-        } catch {
-          // Em erro transitório, incrementa tentativas e tenta na próxima reconexão
-          incrementAttempts(action.id);
-          break;
+        } catch (err: unknown) {
+          const isBadRequest =
+            err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 400;
+
+          if (isBadRequest || action.attempts >= 4) {
+            dequeueAction(action.id);
+          } else {
+            incrementAttempts(action.id);
+            break;
+          }
         }
       }
 
@@ -118,15 +124,19 @@ export function useOutboxSync() {
     setSavedVersesFromRemote,
   ]);
 
+  // Listener para sincronização automática ao mudar status ou quando novos itens entram na outbox
+  useEffect(() => {
+    if (status === 'authenticated') {
+      void processOutboxAndPull();
+    }
+  }, [status, outbox.length, processOutboxAndPull]);
+
   // Listener para quando a conexão de rede for restabelecida
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    // Dispara uma sincronização inicial ao montar
-    void processOutboxAndPull();
-
     const unsubscribe = NetInfo.addEventListener((state) => {
-      if (state.isConnected && state.isInternetReachable) {
+      if (state.isConnected) {
         void processOutboxAndPull();
       }
     });

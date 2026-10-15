@@ -15,12 +15,10 @@ export function useSavedVerses() {
   const guestVerses = useGuestStore((s) => s.savedVerses);
   const guestSaveVerse = useGuestStore((s) => s.saveVerse);
   const guestRemoveVerse = useGuestStore((s) => s.removeSavedVerse);
-  const guestIsVerseSaved = useGuestStore((s) => s.isVerseSaved);
 
   const accountVerses = useAccountCacheStore((s) => s.savedVerses);
   const accountSaveVerse = useAccountCacheStore((s) => s.saveVerse);
   const accountRemoveVerse = useAccountCacheStore((s) => s.removeSavedVerse);
-  const accountIsVerseSaved = useAccountCacheStore((s) => s.isVerseSaved);
 
   const savedVerses = isAuthenticated ? accountVerses : guestVerses;
 
@@ -47,12 +45,16 @@ export function useSavedVerses() {
 
   const isVerseSaved = useCallback(
     (reference: string, translation?: string) => {
-      if (isAuthenticated) {
-        return accountIsVerseSaved(reference, translation);
-      }
-      return guestIsVerseSaved(reference, translation);
+      const normRef = reference.toLowerCase().trim();
+      const normTrans = translation?.toLowerCase().trim();
+      return savedVerses.some((v) => {
+        const matchRef = v.reference.toLowerCase().trim() === normRef;
+        if (!matchRef) return false;
+        if (!normTrans) return true;
+        return v.translation.toLowerCase().trim() === normTrans;
+      });
     },
-    [isAuthenticated, accountIsVerseSaved, guestIsVerseSaved],
+    [savedVerses],
   );
 
   return {

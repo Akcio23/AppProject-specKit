@@ -1,21 +1,30 @@
 import { apiRequest } from './apiClient';
 import { AuthResult, AuthTokens, LoginInput, RegisterInput } from '@/types/auth';
+import { normalizeUser } from './usersApi';
 
 export const authApi = {
   async register(input: RegisterInput): Promise<AuthResult> {
-    return apiRequest<AuthResult>('/auth/register', {
+    const res = await apiRequest<AuthResult>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(input),
       skipAuth: true,
     });
+    return {
+      ...res,
+      user: normalizeUser(res.user),
+    };
   },
 
   async login(input: LoginInput): Promise<AuthResult> {
-    return apiRequest<AuthResult>('/auth/login', {
+    const res = await apiRequest<AuthResult>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(input),
       skipAuth: true,
     });
+    return {
+      ...res,
+      user: normalizeUser(res.user),
+    };
   },
 
   async refresh(refreshToken: string): Promise<AuthTokens> {

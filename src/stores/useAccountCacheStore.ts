@@ -189,8 +189,45 @@ export const useAccountCacheStore = create<AccountCacheState>()(
         });
       },
 
-      setSavedVersesFromRemote: (items) => {
-        set({ savedVerses: items });
+      setSavedVersesFromRemote: (remoteItems) => {
+        const current = get().savedVerses;
+        const outbox = get().outbox;
+
+        const pendingDeletedIds = new Set(
+          outbox.filter((a) => a.type === 'delete_verse').map((a) => (a.payload as { id: string }).id),
+        );
+
+        const pendingSaveIds = new Set(
+          outbox.filter((a) => a.type === 'save_verse').map((a) => (a.payload as { id: string }).id),
+        );
+
+        const map = new Map<string, SavedVerse>();
+
+        // 1. Adiciona os itens que vieram do servidor (exceto os que o usuário acabou de deletar localmente)
+        for (const item of remoteItems) {
+          if (!pendingDeletedIds.has(item.id)) {
+            map.set(item.id, item);
+          }
+        }
+
+        // 2. Preserva itens locais pendentes na outbox ou que ainda não chegaram no servidor
+        for (const local of current) {
+          if (pendingDeletedIds.has(local.id)) continue;
+
+          // Se está pendente para salvar ou se o servidor ainda não tem essa referência
+          const alreadyInRemote = remoteItems.some(
+            (r) =>
+              r.id === local.id ||
+              (r.reference.toLowerCase().trim() === local.reference.toLowerCase().trim() &&
+                r.translation.toLowerCase().trim() === local.translation.toLowerCase().trim()),
+          );
+
+          if (pendingSaveIds.has(local.id) || !alreadyInRemote) {
+            map.set(local.id, local);
+          }
+        }
+
+        set({ savedVerses: Array.from(map.values()) });
       },
 
       enqueueAction: (type, payload) => {

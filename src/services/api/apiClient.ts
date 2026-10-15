@@ -169,10 +169,15 @@ export async function apiRequest<T>(
     return (envelope?.data !== undefined ? envelope.data : json) as T;
   } catch (error: unknown) {
     if (error instanceof ApiError) throw error;
+    console.error('[API CLIENT ERROR]', error);
     if (error instanceof Error && error.name === 'AbortError') {
       throw new ApiError('TIMEOUT', 'O servidor demorou demais para responder.');
     }
-    throw new ApiError('NETWORK_ERROR', 'Não foi possível conectar ao servidor. Verifique sua conexão.');
+    const realMsg = error instanceof Error ? error.message : String(error);
+    throw new ApiError(
+      'NETWORK_ERROR',
+      `Não foi possível conectar ao servidor (${realMsg}). Verifique sua conexão.`,
+    );
   } finally {
     clearTimeout(timeoutId);
   }

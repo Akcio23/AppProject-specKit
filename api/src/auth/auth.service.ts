@@ -105,7 +105,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        photoUrl: null,
+        photoUrl: user.photoKey ? `/files/avatars/${user.photoKey}` : null,
         createdAt: user.createdAt.toISOString(),
       },
       preferences: {
@@ -200,7 +200,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        photoUrl: null, // Será integrado na Fase 6
+        photoUrl: user.photoKey ? `/files/avatars/${user.photoKey}` : null,
         createdAt: user.createdAt.toISOString(),
       },
       preferences: {

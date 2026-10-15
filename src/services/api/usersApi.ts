@@ -1,4 +1,6 @@
-import { apiClient, API_BASE_URL } from './apiClient';
+import * as FileSystem from 'expo-file-system/legacy';
+import { apiClient, API_BASE_URL, ApiError } from './apiClient';
+import { useSessionStore } from '@/stores/useSessionStore';
 import { User } from '@/types/auth';
 
 export const usersApi = {
@@ -17,27 +19,33 @@ export const usersApi = {
     return this.normalizeUser(user);
   },
 
-  async uploadPhoto(fileUri: string, mimeType = 'image/jpeg'): Promise<User> {
-    const formData = new FormData();
-    const rawFilename = fileUri.split('/').pop() ?? 'avatar.jpg';
-    const filename = rawFilename.includes('.') ? rawFilename : `${rawFilename}.jpg`;
-    const cleanMime = filename.endsWith('.png')
-      ? 'image/png'
-      : filename.endsWith('.webp')
-        ? 'image/webp'
-        : mimeType || 'image/jpeg';
+  async uploadPhoto(fileUri: string, _mimeType = 'image/jpeg'): Promise<User> {
+    const url = `${API_BASE_URL}/me/photo`;
+    const token = useSessionStore.getState().accessToken;
 
-    // Formato padrão do React Native para upload multipart/form-data
-    formData.append('file', {
-      uri: fileUri,
-      name: filename,
-      type: cleanMime,
-    } as unknown as Blob);
-
-    const user = await apiClient.request<User>('/me/photo', {
-      method: 'PUT',
-      body: formData,
+    const response = await FileSystem.uploadAsync(url, fileUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
+
+    if (response.status < 200 || response.status >= 300) {
+      let message = 'Falha ao enviar foto.';
+      try {
+        const errorJson = JSON.parse(response.body);
+        message = errorJson?.error?.message ?? message;
+      } catch {
+        // fallback
+      }
+      throw new ApiError('UPLOAD_FAILED', message, response.status);
+    }
+
+    const json = JSON.parse(response.body);
+    const user = (json?.data !== undefined ? json.data : json) as User;
     return this.normalizeUser(user);
   },
 
@@ -45,18 +53,22 @@ export const usersApi = {
     const user = await apiClient.request<User>('/me/photo', {
       method: 'DELETE',
     });
-    return this.normalizeUser(user);
+    return normalizeUser(user);
   },
 
   normalizeUser(user: User): User {
-    if (user.photoUrl && user.photoUrl.startsWith('/')) {
-      // Converte rota relativa da API para URL absoluta acessível no mobile
-      const baseRoot = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-      return {
-        ...user,
-        photoUrl: `${baseRoot}/api/v1${user.photoUrl}`,
-      };
-    }
-    return user;
+    return normalizeUser(user);
   },
 };
+
+export function normalizeUser(user: User): User {
+  if (user.photoUrl && user.photoUrl.startsWith('/')) {
+    const baseRoot = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+    return {
+      ...user,
+      photoUrl: `${baseRoot}/api/v1${user.photoUrl}`,
+    };
+  }
+  return user;
+}
+

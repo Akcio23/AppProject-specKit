@@ -8,12 +8,12 @@ export class SaveVerseDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(2000)
+  @MaxLength(5000)
   text!: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(20)
+  @MaxLength(100)
   translation!: string;
 
   @IsDateString()

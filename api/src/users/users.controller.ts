@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Patch,
+  Post,
   Put,
   UploadedFile,
   UseInterceptors,
@@ -55,6 +56,28 @@ export class UsersController {
       throw new BadRequestException('Nenhum arquivo de imagem foi enviado.');
     }
     return this.usersService.uploadPhoto(userId, file.buffer);
+  }
+
+  @Post('photo')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB máx
+      },
+      fileFilter: (_req, file, cb) => {
+        if (!file || !file.mimetype || !file.mimetype.startsWith('image/')) {
+          return cb(new BadRequestException('Apenas arquivos de imagem são permitidos.'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadPhotoPost(
+    @CurrentUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.uploadPhoto(userId, file);
   }
 
   @Delete('photo')
