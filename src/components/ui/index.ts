@@ -8,4 +8,5 @@ export { TopicMenu, type TopicTabItem } from './TopicMenu';
 export { SideDrawer, type DrawerMenuItem } from './SideDrawer';
 export { Avatar, type AvatarProps } from './Avatar';
 export { ThemePillSwitch, type ThemePillSwitchProps } from './ThemePillSwitch';
-
+export { LanguagePillSelector, type LanguagePillSelectorProps } from './LanguagePillSelector';
+export { CurvedBottomNav, type CurvedBottomNavProps } from './CurvedBottomNav';

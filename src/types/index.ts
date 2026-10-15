@@ -66,3 +66,37 @@ export interface AppState {
   removeSavedVerse: (idOrReference: string) => void;
   isVerseSaved: (reference: string, translation?: string) => boolean;
 }
+
+/* ------------------------------------------------------------------ */
+/* Tipos da Feature 007: Perfil, Idioma Minimalista & Galeria         */
+/* ------------------------------------------------------------------ */
+
+export type AppLanguage = 'pt' | 'en' | 'es';
+
+export interface LanguageOption {
+  code: AppLanguage;
+  label: string;
+  shortLabel: string;
+  defaultTranslationId: string;
+}
+
+export interface ProfileMetrics {
+  savedCount: number;
+  streakDays: number;
+  favoritesCount: number;
+}
+
+export interface InspirationGalleryItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  reference?: string;
+  imageUrl: string;
+  aspectRatio?: 'panoramic' | 'square';
+  tag?: string;
+}
+
+export type ProfileTabId = 'gallery' | 'favorites' | 'settings';
+
+export type BottomNavRoute = 'home' | 'search' | 'create' | 'inbox' | 'profile';
+
