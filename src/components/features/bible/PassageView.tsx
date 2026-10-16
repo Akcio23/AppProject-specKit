@@ -1,11 +1,26 @@
-import { memo, useCallback } from 'react';
-import { FlatList, ListRenderItem, StyleSheet, Text, View } from 'react-native';
+import { memo, useCallback, useRef } from 'react';
+import {
+  FlatList,
+  ListRenderItem,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { Passage, Verse } from '@/types/bible';
 import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
+import { Feather } from '@expo/vector-icons';
+
 interface Props {
   passage: Passage;
+  onScrollDirectionChange?: (direction: 'up' | 'down') => void;
+  onNavigateChapter?: (direction: 'prev' | 'next') => void;
+  hasPrevChapter?: boolean;
+  hasNextChapter?: boolean;
 }
 
 const VerseRow = memo(({ verse, textPrimary, borderSubtle, accentText, accentSoft }: {
@@ -27,8 +42,47 @@ VerseRow.displayName = 'VerseRow';
 const keyExtractor = (v: Verse): string => `${v.bookId}-${v.chapter}-${v.verse}`;
 
 /** Lista virtualizada dos versículos em formato editorial clean pastel. */
-export const PassageView = memo(({ passage }: Props) => {
+export const PassageView = memo(({
+  passage,
+  onScrollDirectionChange,
+  onNavigateChapter,
+  hasPrevChapter = false,
+  hasNextChapter = false,
+}: Props) => {
   const { theme } = useTheme();
+  const lastOffsetYRef = useRef<number>(0);
+  const lastDirectionRef = useRef<'up' | 'down'>('up');
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!onScrollDirectionChange) return;
+
+      const currentY = event.nativeEvent.contentOffset.y;
+      const diff = currentY - lastOffsetYRef.current;
+
+      // Perto do topo: sempre expande
+      if (currentY <= 15) {
+        if (lastDirectionRef.current !== 'up') {
+          lastDirectionRef.current = 'up';
+          onScrollDirectionChange('up');
+        }
+        lastOffsetYRef.current = currentY;
+        return;
+      }
+
+      // Limiar seguro para evitar oscilações em micro-toques
+      const SCROLL_THRESHOLD = 15;
+      if (Math.abs(diff) > SCROLL_THRESHOLD) {
+        const newDirection: 'up' | 'down' = diff > 0 ? 'down' : 'up';
+        if (newDirection !== lastDirectionRef.current) {
+          lastDirectionRef.current = newDirection;
+          onScrollDirectionChange(newDirection);
+        }
+        lastOffsetYRef.current = currentY;
+      }
+    },
+    [onScrollDirectionChange],
+  );
 
   const renderItem: ListRenderItem<Verse> = useCallback(
     ({ item }) => (
@@ -53,6 +107,8 @@ export const PassageView = memo(({ passage }: Props) => {
       initialNumToRender={15}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
       ListHeaderComponent={
         <View
           style={[
@@ -74,6 +130,51 @@ export const PassageView = memo(({ passage }: Props) => {
             {passage.translationName}
           </Text>
         </View>
+      }
+      ListFooterComponent={
+        onNavigateChapter ? (
+          <View style={styles.chapterNavigation}>
+            <Pressable
+              onPress={() => onNavigateChapter('prev')}
+              disabled={!hasPrevChapter}
+              style={({ pressed }) => [
+                styles.navChapterButton,
+                {
+                  backgroundColor: theme.surfaceCard,
+                  borderColor: theme.borderSubtle,
+                  opacity: hasPrevChapter ? (pressed ? 0.7 : 1) : 0.35,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Capítulo anterior"
+            >
+              <Feather name="chevron-left" size={16} color={theme.textPrimary} />
+              <Text style={[styles.navChapterText, { color: theme.textPrimary }]}>
+                Cap. Anterior
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => onNavigateChapter('next')}
+              disabled={!hasNextChapter}
+              style={({ pressed }) => [
+                styles.navChapterButton,
+                {
+                  backgroundColor: theme.surfaceCard,
+                  borderColor: theme.borderSubtle,
+                  opacity: hasNextChapter ? (pressed ? 0.7 : 1) : 0.35,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Próximo capítulo"
+            >
+              <Text style={[styles.navChapterText, { color: theme.textPrimary }]}>
+                Próximo Cap.
+              </Text>
+              <Feather name="chevron-right" size={16} color={theme.textPrimary} />
+            </Pressable>
+          </View>
+        ) : null
       }
     />
   );
@@ -122,5 +223,29 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.md,
     lineHeight: 26,
     letterSpacing: 0.2,
+  },
+  chapterNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  navChapterButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm,
+    gap: 6,
+    minHeight: 46,
+  },
+  navChapterText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
   },
 });

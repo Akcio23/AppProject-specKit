@@ -270,7 +270,7 @@ export const SideDrawer = memo(({
             <Feather name="search" size={17} color={theme.textMuted} />
             {!isCollapsed && (
               <Text style={[styles.searchPlaceholder, { color: theme.textMuted }]}>
-                Search...
+                Procurar...
               </Text>
             )}
           </Pressable>

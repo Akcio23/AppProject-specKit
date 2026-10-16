@@ -26,7 +26,7 @@ const EXAMPLES = [
  */
 export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>) {
   const insets = useSafeAreaInsets();
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const initialReference = route.params?.initialReference ?? '';
 
   const parsedInitial = parseBibleReference(initialReference);
@@ -36,19 +36,55 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
 
   const { translationId } = usePreferences();
   const passage = usePassage(submitted, translationId);
+  const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
+
+  const handleScrollDirection = useCallback((direction: 'up' | 'down') => {
+    setIsSearchCollapsed(direction === 'down');
+  }, []);
 
   const handleSubmit = useCallback(() => {
     if (!selectedBook) return;
     const chapter = chapterText.trim();
-    if (chapter.length === 0) return;
-    const fullRef = `${selectedBook.name} ${chapter}`;
-    setSubmitted(fullRef);
+    if (chapter.length === 0) {
+      // Livros de 1 capítulo só na Bíblia (retorna o livro inteiro)
+      const SINGLE_CHAPTER_BOOKS: Record<string, string> = {
+        OBA: '1:1-21',
+        PHM: '1:1-25',
+        '2JN': '1:1-13',
+        '3JN': '1:1-14',
+        JUD: '1:1-25',
+      };
+      const singleRange = SINGLE_CHAPTER_BOOKS[selectedBook.id];
+      if (singleRange) {
+        setSubmitted(`${selectedBook.name} ${singleRange}`);
+      } else {
+        // Demais livros: inicia no capítulo 1
+        setSubmitted(`${selectedBook.name} 1`);
+      }
+    } else {
+      setSubmitted(`${selectedBook.name} ${chapter}`);
+    }
   }, [selectedBook, chapterText]);
+
+  const currentChapter = passage.data?.verses[0]?.chapter;
+  const currentBookName = passage.data?.verses[0]?.bookName ?? selectedBook?.name;
+
+  const handleNavigateChapter = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (!currentChapter || !currentBookName) return;
+      const targetChapter = direction === 'next' ? currentChapter + 1 : currentChapter - 1;
+      if (targetChapter < 1) return;
+      setChapterText(String(targetChapter));
+      setSubmitted(`${currentBookName} ${targetChapter}`);
+    },
+    [currentChapter, currentBookName],
+  );
 
   const handleClear = useCallback(() => {
     setSelectedBook(null);
     setChapterText('');
     setSubmitted('');
+    setIsSearchCollapsed(false);
   }, []);
 
   const handleExample = useCallback((reference: string) => {
@@ -56,6 +92,7 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
     setSelectedBook(parsed.book);
     setChapterText(parsed.chapter);
     setSubmitted(reference);
+    setIsSearchCollapsed(false);
   }, []);
 
   const handleRetry = useCallback(() => {
@@ -125,7 +162,15 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
       );
     }
 
-    return <PassageView passage={passage.data} />;
+    return (
+      <PassageView
+        passage={passage.data}
+        onScrollDirectionChange={handleScrollDirection}
+        onNavigateChapter={handleNavigateChapter}
+        hasPrevChapter={Boolean(currentChapter && currentChapter > 1)}
+        hasNextChapter={Boolean(currentChapter)}
+      />
+    );
   };
 
   return (
@@ -134,49 +179,12 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
         styles.container,
         {
           backgroundColor: theme.background,
+          paddingTop: spacing.xs,
           paddingBottom: insets.bottom + spacing.sm,
         },
       ]}
     >
       <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
-
-      {/* Barra Superior com Identificação e Alternador de Tema */}
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <Text style={[styles.topBarTitle, { color: theme.textPrimary }]}>
-            Bíblia Sagrada
-          </Text>
-          <View
-            style={[
-              styles.versionBadge,
-              {
-                backgroundColor: theme.accentSoft,
-                borderColor: theme.accent,
-              },
-            ]}
-          >
-            <Text style={[styles.versionBadgeText, { color: theme.textPrimary }]}>
-              {translationId.toUpperCase()} (PT)
-            </Text>
-          </View>
-        </View>
-
-        <Pressable
-          onPress={toggleTheme}
-          style={({ pressed }) => [
-            styles.themeToggleBtn,
-            {
-              backgroundColor: theme.surfaceCard,
-              borderColor: theme.borderSubtle,
-            },
-            pressed && styles.themeToggleBtnPressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Alternar entre modo claro e escuro"
-        >
-          <Text style={styles.themeToggleText}>{isDark ? '☀️' : '🌙'}</Text>
-        </Pressable>
-      </View>
 
       {/* Motor de Busca Controlado: Livro Pré-definido + Entrada Livre de Capítulo */}
       <ControlledBibleSearch
@@ -187,6 +195,9 @@ export function BibleSearchScreen({ route }: RootStackScreenProps<'BibleSearch'>
         onSubmit={handleSubmit}
         onClear={submitted.length > 0 ? handleClear : undefined}
         isLoading={passage.isFetching}
+        isCollapsed={isSearchCollapsed}
+        onExpandRequest={() => setIsSearchCollapsed(false)}
+        currentChapter={currentChapter}
       />
 
       {/* Conteúdo da Passagem ou Sugestões */}
@@ -199,46 +210,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs + 2,
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs + 2,
-  },
-  topBarTitle: {
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.bold,
-  },
-  versionBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.xs + 2,
-    paddingVertical: 1,
-  },
-  versionBadgeText: {
-    fontSize: 10,
-    fontWeight: typography.fontWeight.bold,
-  },
-  themeToggleBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeToggleBtnPressed: {
-    opacity: 0.7,
-  },
-  themeToggleText: {
-    fontSize: 16,
   },
   body: {
     flex: 1,
