@@ -16,7 +16,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useSavedVerses } from '@/hooks/useSavedVerses';
 import { useSessionStore } from '@/stores/useSessionStore';
-import { CurvedBottomNav } from '@/components/ui';
 import {
   ProfileHero,
   ProfileMetricsRow,
@@ -166,7 +165,7 @@ export const ProfileScreen = memo(({ navigation }: RootStackScreenProps<'Profile
   return (
     <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Feedback visual temporário */}
@@ -259,13 +258,6 @@ export const ProfileScreen = memo(({ navigation }: RootStackScreenProps<'Profile
           </View>
         )}
       </ScrollView>
-
-      {/* Barra de Navegação Inferior com Curvatura Orgânica */}
-      <CurvedBottomNav
-        activeRoute="profile"
-        onPressHome={() => navigation.goBack()}
-        onPressSearch={() => navigation.navigate('BibleSearch')}
-      />
     </View>
   );
 });
